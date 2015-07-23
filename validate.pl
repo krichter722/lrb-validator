@@ -29,9 +29,27 @@
 use DBI;
 use strict;
 use FileHandle;
+use Getopt::Long;
 
-@ARGV == 1 or die ("Usage: validate.pl [PROPERTIES FILE with path]");
-my $propertyfile=$ARGV[0];
+my $verbose = 'Print verbose informtion';	# option variable with default value (false)
+my $debug = 'Print debug information (implies verbose)';	# option variable with default value (false)
+my $propertyfile = ''; # Path to properties file
+
+# somehow declaring sub arguments fails because the argument names are not declared (-> sense?)
+sub properties_file_arg { 
+    $propertyfile = $_[0]; 
+}
+
+# apparently non-option arguments can only be specified using subroutine being
+# associated with '<>'<ref>http://perldoc.perl.org/Getopt/Long.html</ref>
+GetOptions ('verbose' => \$verbose, 'debug' => \$debug, '<>' => \&properties_file_arg)
+or die("Option parsing failed due to previously indicated error"); # GetOptions writes error messages
+    # with warn() and die(), so they should be definitely displayed
+
+if ( $propertyfile eq '' ) {
+    die "A path to a properties file has to be specified as non-option argument";
+}
+
 my $currLine;
 my @currProp;
 
@@ -40,7 +58,6 @@ my $dbuser;
 my $dbpassword;
 my $logfile;
 my $logvar;
-
 
 #BEGIN {
 #	open (STDERR, ">execution.log");
