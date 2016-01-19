@@ -3,3 +3,9 @@ validate.config
 
 # log files
 lrb-validator.log
+
+# python setuptools
+.eggs/
+build/
+dist/
+template_helper.egg-info/

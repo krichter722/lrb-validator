@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 
 #
 # Copyright (C) 2014 - 2015 Humboldt-Universität zu Berlin
@@ -7,9 +7,9 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,6 +27,7 @@ import os
 import plac
 from Cheetah.Template import Template
 import logging
+import template_helper
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -57,16 +58,14 @@ def main(base_dir=base_dir_default, remove_log=False, log_file_name=log_file_nam
     elif os.path.isfile(base_dir):
         raise ValueError("base_dir '%s' is an existing file, but needs to be a directory" % (base_dir,))
     t = Template(file=os.path.realpath(os.path.join(__file__, "..", "validate.config.tmpl")))
-    t_file = open(os.path.realpath(os.path.join(__file__, "..", "validate.config")), "w")
+    t_file_path = os.path.realpath(os.path.join(__file__, "..", "validate.config"))
     t.base_dir = base_dir
     t.keep_log = remove_log_value_map[not remove_log] #see internal implementation notes below
     t.log_file_name = log_file_name
     t.database_name = database_name
     t.database_user = database_user
     t.database_password = database_password
-    t_file.write(str(t))
-    t_file.flush()
-    t_file.close()
+    template_helper.write_template_file(str(t), t_file_path)
 # internal implementation notes:
 # - due to the fact that the keeplog variable is true by default (which isn't
 # useful for a flag), we wrap it in its negative meaning to get a by default
