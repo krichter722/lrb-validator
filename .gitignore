@@ -9,6 +9,7 @@ lrb-validator.log
 build/
 dist/
 template_helper.egg-info/
+setuptools_version_command-2.2-py2.7.egg
 
 # binaries
 *.pyc
