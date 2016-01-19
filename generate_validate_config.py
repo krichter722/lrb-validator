@@ -28,6 +28,7 @@ import plac
 from Cheetah.Template import Template
 import logging
 import template_helper
+import validate_globals
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -35,31 +36,25 @@ ch = logging.StreamHandler()
 ch.setLevel(logging.INFO)
 logger.addHandler(ch)
 
-base_dir_default = os.path.join(os.path.expanduser("~"), ".lrb-validator")
-log_file_name_default = "lrb-validator.log"
-database_name_default = "dbxway01"
-database_user_default = "linear"
-database_password_default = "linear"
-
 remove_log_value_map = {True: "yes", False: "no"}
 
 @plac.annotations(
-    base_dir=("the base directory of the LRB validator input and output data", "positional", None, str),
+    base_dir_path=("the base directory of the LRB validator input and output data", "positional", None, str),
     remove_log=("whether the logs ought to be deleted right after the validation", "flag"),
-    log_file_name=("the name of the logfile to be produced in base_dir", "option"),
+    log_file_name=("the name of the logfile to be produced in base_dir_path", "option"),
     database_name=("the database name", "option"),
     database_user=("the database user", "option"),
     database_password=("the database password", "option"),
 )
-def main(base_dir=base_dir_default, remove_log=False, log_file_name=log_file_name_default, database_name=database_name_default, database_user=database_user_default, database_password=database_password_default):
-    if not os.path.exists(base_dir):
-        logger.info("creating inexisting base_dir '%s'" % (base_dir,))
-        os.makedirs(base_dir)
-    elif os.path.isfile(base_dir):
-        raise ValueError("base_dir '%s' is an existing file, but needs to be a directory" % (base_dir,))
+def main(base_dir_path=validate_globals.base_dir_path_default, remove_log=False, log_file_name=log_file_name_default, database_name=database_name_default, database_user=database_user_default, database_password=database_password_default):
+    if not os.path.exists(base_dir_path):
+        logger.info("creating inexisting base directory '%s'" % (base_dir_path,))
+        os.makedirs(base_dir_path)
+    elif os.path.isfile(base_dir_path):
+        raise ValueError("base directory '%s' is an existing file, but needs to be a directory" % (base_dir_path,))
     t = Template(file=os.path.realpath(os.path.join(__file__, "..", "validate.config.tmpl")))
     t_file_path = os.path.realpath(os.path.join(__file__, "..", "validate.config"))
-    t.base_dir = base_dir
+    t.base_dir_path = base_dir_path
     t.keep_log = remove_log_value_map[not remove_log] #see internal implementation notes below
     t.log_file_name = log_file_name
     t.database_name = database_name

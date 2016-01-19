@@ -31,5 +31,5 @@ setup(
     version_command = ("git describe --tags", "pep440-git"),
     packages = ["."],
     setup_requires = ["setuptools-version-command>=2.2"],
-    install_requires = ["template-helper>=1.0a0"]
+    install_requires = ["template-helper>=1.0a0", "python-essentials>=1.1.5.post9", "psycopg2", "pexpect", "plac"]
 )
