@@ -57,10 +57,12 @@ createdb_default = "/usr/lib/postgresql/9.4/bin/createdb"
 
 def bootstrap(cpan=cpan_default, initdb=initdb_default, postgres=postgres_default, createdb=createdb_default, base_dir_path=validate_globals.base_dir_path_default, db_name=validate_globals.database_name_default, db_user=validate_globals.database_user_default, db_pass=validate_globals.database_password_default, shutdown_server=False):
     sp.check_call([cpan, "DBD::PgPP", "Log::Log4perl"])
-    if check_os.check_debian() or check_os.check_ubuntu():
-        pm_utils.install_packages(["postgresql"])
-    else:
-        raise ValueError("operating system not supported")
+    # request installation of postgresql and python-augeas outside the script
+    # in README.md in order to avoid the need for privileges for the script
+    #if check_os.check_debian() or check_os.check_ubuntu():
+    #    pm_utils.install_packages(["postgresql", "python-augeas"])
+    #else:
+    #    raise ValueError("operating system not supported")
     db_dir_path = os.path.join(base_dir_path, "database")
     if not os.path.exists(db_dir_path):
         logger.debug("creating PostgreSQL database in '%s'" % (db_dir_path,))
