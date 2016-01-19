@@ -27,7 +27,7 @@ from setuptools import setup, find_packages
 from pkg_resources import parse_version
 
 setup(
-    name = "template-helper",
+    name = "lrb-validator",
     version_command = ("git describe --tags", "pep440-git"),
     packages = ["."],
     setup_requires = ["setuptools-version-command>=2.2"],
