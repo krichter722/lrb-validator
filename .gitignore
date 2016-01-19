@@ -8,7 +8,7 @@ lrb-validator.log
 .eggs/
 build/
 dist/
-template_helper.egg-info/
+lrb_validator.egg-info/
 setuptools_version_command-2.2-py2.7.egg
 
 # binaries
