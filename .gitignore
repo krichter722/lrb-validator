@@ -9,3 +9,6 @@ lrb-validator.log
 build/
 dist/
 template_helper.egg-info/
+
+# binaries
+*.pyc
