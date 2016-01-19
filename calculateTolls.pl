@@ -5,9 +5,9 @@
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -61,8 +61,8 @@ my $dbh = DBI->connect(
 eval {
    my $startTime = time;
 
-   highLavsLowVehicles($dbh);   
-   accidents($dbh); 
+   highLavsLowVehicles($dbh);
+   accidents($dbh);
    highToll($dbh);
    accidentSegments($dbh);
    notAccidents($dbh);
@@ -83,8 +83,8 @@ exit(0);
 
 sub highLavsLowVehicles
 {
-   my ($dbh) = @_;  
-          
+   my ($dbh) = @_;
+
    my $startTime = time;
 
    my $sql =  "UPDATE statistics
@@ -93,7 +93,7 @@ sub highLavsLowVehicles
                       numVehicles <= $MAX_NUM_VEHICLE;";
 
    my $statement = $dbh->prepare($sql);
-   $statement->execute;      
+   $statement->execute;
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
@@ -107,8 +107,8 @@ sub highLavsLowVehicles
 
 sub accidents
 {
-   my ($dbh) = @_;  
-          
+   my ($dbh) = @_;
+
    my $startTime = time;
 
 #   my $sql =  "UPDATE statistics
@@ -116,14 +116,14 @@ sub accidents
 #                      accident = 1
 #               WHERE EXISTS(
 #                         SELECT acc.seg
-#                         FROM   accident AS acc 
+#                         FROM   accident AS acc
 #                         WHERE  acc.xway = statistics.xway AND
 #                                acc.dir = statistics.dir AND
 #                                acc.firstMinute + 1 <= statistics.minute AND
 #                                acc.lastMinute + 1 >= statistics.minute AND
 #                                ( ( (acc.dir = 0) AND
 #                                    (acc.seg >= statistics.seg) AND
-#                                    (acc.seg <= statistics.seg + $MAX_DOWNSTREAM_SEGMENT) 
+#                                    (acc.seg <= statistics.seg + $MAX_DOWNSTREAM_SEGMENT)
 #                                   ) OR
 #                                   ( (acc.dir <> 0) AND
 #                                     (acc.seg <= statistics.seg) AND
@@ -137,13 +137,13 @@ sub accidents
                       accident = 1
                WHERE EXISTS(
                          SELECT acc.seg
-                         FROM   accident AS acc 
+                         FROM   accident AS acc
                          WHERE  acc.dir = statistics.dir AND
                                 acc.firstMinute + 1 <= statistics.minute AND
                                 acc.lastMinute + 1 >= statistics.minute AND
                                 ( ( (acc.dir = 0) AND
                                     (acc.seg >= statistics.seg) AND
-                                    (acc.seg <= statistics.seg + $MAX_DOWNSTREAM_SEGMENT) 
+                                    (acc.seg <= statistics.seg + $MAX_DOWNSTREAM_SEGMENT)
                                    ) OR
                                    ( (acc.dir <> 0) AND
                                      (acc.seg <= statistics.seg) AND
@@ -153,7 +153,7 @@ sub accidents
                       );";
 
    my $statement = $dbh->prepare($sql);
-   $statement->execute;      
+   $statement->execute;
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
@@ -166,8 +166,8 @@ sub accidents
 
 sub highToll
 {
-   my ($dbh) = @_;  
-          
+   my ($dbh) = @_;
+
    my $startTime = time;
 
    my $sql =  "UPDATE statistics
@@ -175,7 +175,7 @@ sub highToll
                WHERE  toll IS NULL;";
 
    my $statement = $dbh->prepare($sql);
-   $statement->execute;      
+   $statement->execute;
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
@@ -188,21 +188,21 @@ sub highToll
 
 sub accidentSegments
 {
-   my ($dbh) = @_;  
-          
+   my ($dbh) = @_;
+
    my $startTime = time;
 
 #   my $sql =  "UPDATE statistics
 #               SET    accidentSeg = (
 #                         SELECT acc.seg
-#                         FROM   accident AS acc 
+#                         FROM   accident AS acc
 #                         WHERE  acc.xway = statistics.xway AND
 #                                acc.dir = statistics.dir AND
 #                                acc.firstMinute + 1 <= statistics.minute AND
 #                                acc.lastMinute + 1 >= statistics.minute AND
 #                                ( ( (acc.dir = 0) AND
 #                                    (acc.seg >= statistics.seg) AND
-#                                    (acc.seg <= statistics.seg + $MAX_DOWNSTREAM_SEGMENT) 
+#                                    (acc.seg <= statistics.seg + $MAX_DOWNSTREAM_SEGMENT)
 #                                   ) OR
 #                                   ( (acc.dir <> 0) AND
 #                                     (acc.seg <= statistics.seg) AND
@@ -215,13 +215,13 @@ sub accidentSegments
    my $sql =  "UPDATE statistics
                SET    accidentSeg = (
                          SELECT acc.seg
-                         FROM   accident AS acc 
+                         FROM   accident AS acc
                          WHERE  acc.dir = statistics.dir AND
                                 acc.firstMinute + 1 <= statistics.minute AND
                                 acc.lastMinute + 1 >= statistics.minute AND
                                 ( ( (acc.dir = 0) AND
                                     (acc.seg >= statistics.seg) AND
-                                    (acc.seg <= statistics.seg + $MAX_DOWNSTREAM_SEGMENT) 
+                                    (acc.seg <= statistics.seg + $MAX_DOWNSTREAM_SEGMENT)
                                    ) OR
                                    ( (acc.dir <> 0) AND
                                      (acc.seg <= statistics.seg) AND
@@ -234,7 +234,7 @@ sub accidentSegments
 
 
    my $statement = $dbh->prepare($sql);
-   $statement->execute;      
+   $statement->execute;
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
@@ -248,8 +248,8 @@ sub accidentSegments
 
 sub notAccidents
 {
-   my ($dbh) = @_;  
-          
+   my ($dbh) = @_;
+
    my $startTime = time;
 
    my $sql =  "UPDATE statistics
@@ -258,7 +258,7 @@ sub notAccidents
                WHERE  accident IS NULL;";
 
    my $statement = $dbh->prepare($sql);
-   $statement->execute;      
+   $statement->execute;
    $dbh->commit;
 
    my $runningTime =  time - $startTime;

@@ -5,9 +5,9 @@
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,8 +36,8 @@ my $debug = 'Print debug information (implies verbose)';	# option variable with 
 my $propertyfile = ''; # Path to properties file
 
 # somehow declaring sub arguments fails because the argument names are not declared (-> sense?)
-sub properties_file_arg { 
-    $propertyfile = $_[0]; 
+sub properties_file_arg {
+    $propertyfile = $_[0];
 }
 
 # apparently non-option arguments can only be specified using subroutine being
@@ -82,7 +82,7 @@ while (  $currLine = <PROPERTIES>){
 	}
 	if ( $currProp[0] eq "databasename") {
 		$dbname=$currProp[1];
-	}	
+	}
 	if ( $currProp[0] eq "databaseusername") {
 		$dbuser=$currProp[1];
 	}

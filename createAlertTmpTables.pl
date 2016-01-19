@@ -5,9 +5,9 @@
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,10 +18,10 @@
 # Please consider the following "Modified history" a legacy revision management
 # which has been taken over by git
 ####################################################################
-# Author	:	Nga Tran
-# Date   	:       Aug 24, 2004
-# Purposes	:
-#	. Create alerts temporary tables
+# Author    :   Nga Tran
+# Date      :       Aug 24, 2004
+# Purposes  :
+#   . Create alerts temporary tables
 # Modified history :
 #      Name        Date           Comment
 #      -------     -----------    ---------------------------------
@@ -72,44 +72,44 @@ exit(0);
 
 sub createTollAccAlertsTmpTable
 {
-   my ($dbh) = @_; 
+   my ($dbh) = @_;
 
    $dbh->do("DROP TABLE tollAccAlertsTmp;");
 
-#   $dbh->do("CREATE TABLE TollAccAlertsTmp(   
-#  	          time   INTEGER,
-#  	          carid  INTEGER,
-#      	          xway   INTEGER,
-#  	          dir    INTEGER,
-#  	          seg    INTEGER,
-#  	          lav    INTEGER,
-#  	          toll   INTEGER,
-#  	          accidentSeg INTEGER);");
+#   $dbh->do("CREATE TABLE TollAccAlertsTmp(
+#             time   INTEGER,
+#             carid  INTEGER,
+#                 xway   INTEGER,
+#             dir    INTEGER,
+#             seg    INTEGER,
+#             lav    INTEGER,
+#             toll   INTEGER,
+#             accidentSeg INTEGER);");
 
-   $dbh->do("CREATE TABLE TollAccAlertsTmp(   
-  	          time   INTEGER,
-  	          carid  INTEGER,
-  	          dir    INTEGER,
-  	          seg    INTEGER,
-  	          lav    INTEGER,
-  	          toll   INTEGER,
-  	          accidentSeg INTEGER);");
+   $dbh->do("CREATE TABLE TollAccAlertsTmp(
+              time   INTEGER,
+              carid  INTEGER,
+              dir    INTEGER,
+              seg    INTEGER,
+              lav    INTEGER,
+              toll   INTEGER,
+              accidentSeg INTEGER);");
 }
 
 #--------------------------------------------------------------------------------
 
 sub logTime {
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-	return ( ($mon+1)."-".$mday."-".($year+1900)." ".$hour.":".$min.":".$sec );
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
+    return ( ($mon+1)."-".$mday."-".($year+1900)." ".$hour.":".$min.":".$sec );
 }
 
 
 sub writeToLog {
-	my ( $logfile, $logvar, $logmessage ) = @_;
-	if ($logvar eq "yes") {
-		open( LOGFILE1, ">>$logfile")  || die("Could not open file: $!");
-		LOGFILE1->autoflush(1);
-		print LOGFILE1 ( logTime()."> $logmessage"."\n");
-		close (LOGFILE1);
-	}
+    my ( $logfile, $logvar, $logmessage ) = @_;
+    if ($logvar eq "yes") {
+        open( LOGFILE1, ">>$logfile")  || die("Could not open file: $!");
+        LOGFILE1->autoflush(1);
+        print LOGFILE1 ( logTime()."> $logmessage"."\n");
+        close (LOGFILE1);
+    }
 }

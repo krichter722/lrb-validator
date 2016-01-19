@@ -5,9 +5,9 @@
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -62,11 +62,11 @@ eval {
    indexPreVehicles($dbh);
    vehicles($dbh);
    noVehicles($dbh);
-   dropTmpTables($dbh);   
+   dropTmpTables($dbh);
 
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "Total extractNumVehicles running time:  $runningTime\n\n");   
+   writeToLog($logFile, $logVar, "Total extractNumVehicles running time:  $runningTime\n\n");
 };
 print $@;   # Print out errors
 $dbh->disconnect;
@@ -79,23 +79,23 @@ exit(0);
 
 sub createTmpTables
 {
-   my ($dbh) = @_;  
-          
+   my ($dbh) = @_;
+
 #   $dbh->do("
 #          CREATE TABLE preVehicle(
 #               xway integer,
 #               dir  integer,
 #               seg  integer,
 #               minute integer,
-#               numVehicles  integer);");               
+#               numVehicles  integer);");
 
    $dbh->do("
           CREATE TABLE preVehicle(
                dir  integer,
                seg  integer,
                minute integer,
-               numVehicles  integer);");               
-           
+               numVehicles  integer);");
+
     $dbh->commit;
 }
 
@@ -106,7 +106,7 @@ sub createTmpTables
 sub dropTmpTables
 {
    my ($dbh) = @_;
-   $dbh->do("DROP TABLE  preVehicle;");   
+   $dbh->do("DROP TABLE  preVehicle;");
    $dbh->commit;
 }
 
@@ -144,7 +144,7 @@ sub preVehicles
 
 
    my $statement = $dbh->prepare($sql);
-   $statement->execute;      
+   $statement->execute;
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
@@ -161,7 +161,7 @@ sub indexPreVehicles
    my ($dbh) = @_;
 
    my $startTime = time;
-   
+
 #   $dbh->do("CREATE UNIQUE INDEX preVehicleIdx1
 #             ON preVehicle (xway, dir, seg, minute);");
 
@@ -179,7 +179,7 @@ sub indexPreVehicles
 #------------------------------------------------------------------------
 sub vehicles
 {
-   my ($dbh) = @_; 
+   my ($dbh) = @_;
 
    my $startTime = time;
 
@@ -212,7 +212,7 @@ sub vehicles
 #------------------------------------------------------------------------
 sub noVehicles
 {
-   my ($dbh) = @_; 
+   my ($dbh) = @_;
 
    my $startTime = time;
 

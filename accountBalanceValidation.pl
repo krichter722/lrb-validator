@@ -5,9 +5,9 @@
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,7 +40,7 @@ my $logfile = shift(@arguments);
 my $logvar = shift(@arguments);
 
 my $dbquery;
-my $sth;    
+my $sth;
 my $dbh = DBI->connect("DBI:PgPP:$dbname", "$dbuser", "$dbpassword")
                 or die "Couldn't connect to database: ". DBI->errstr;
 
@@ -66,14 +66,14 @@ if (!@accountBalancecomparison){
 	$dbquery="select i.carid, i.time, i.qid  into temp1 from input as i, accountBalancewronganswers as wr where i.qid=wr.qid and i.time=wr.time;";
 	$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
 	$sth->execute;
-	
+
 	$dbquery="select temp1.carid, temp1.time, temp1.qid into temp2 from temp1, input where temp1.carid=input.carid and input.time=temp1.time and input.lane=4;";
 	$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
 	$sth->execute;
-	
+
 	$dbquery="delete from accountBalancewronganswers where accountBalancewronganswers.qid=temp2.qid and temp2.time=accountBalancewronganswers.resulttime";
 	$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
-	$sth->execute;	
+	$sth->execute;
 
        $dbh->do("DROP TABLE temp1;");
        $dbh->do("DROP TABLE temp2;");

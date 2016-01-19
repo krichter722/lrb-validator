@@ -5,9 +5,9 @@
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -56,7 +56,7 @@ my $logfile;
 open( PROPERTIES , "$propertyfile") || die("Could not open file: $!");
 while (  $currLine = <PROPERTIES>){
 	chomp ( $currLine );
-        
+
         if (!$currLine){
 	    next;
 	}
@@ -78,7 +78,7 @@ while (  $currLine = <PROPERTIES>){
 	if ( $currProp[0] eq "completehistory") {
 		$completeHistory=$currProp[1];
 #                 print "$completeHistory\n";
-	}	
+	}
 	if ( $currProp[0] eq "outputtollalerts") {
 		$tollAlerts=$currProp[1];
 #                 print "$tollAlerts\n";
@@ -94,7 +94,7 @@ while (  $currLine = <PROPERTIES>){
 	if ( $currProp[0] eq "databasename") {
 		$dbname=$currProp[1];
 #                 print "$dbname\n";
-	}	
+	}
 	if ( $currProp[0] eq "databaseusername") {
 		$dbuser=$currProp[1];
 #                 print "$dbuser\n";
@@ -111,7 +111,7 @@ while (  $currLine = <PROPERTIES>){
 close ( PROPERTIES );
 
 my $dbquery;
-my $sth;    
+my $sth;
 
 my $dbh  = DBI->connect(
             "DBI:PgPP:$dbname", "$dbuser", "$dbpassword",
@@ -130,7 +130,7 @@ open( TEMP , "$completeHistory") || die("Could not open file: $!");
 close( TEMP );
 open( TEMP , "$tollAlerts") || die("Could not open file: $!");
 close( TEMP );
-		
+
 
 ## Import all of the files we need into postgres (first create the table)
 ##Import the input cardatapoints used to feed database

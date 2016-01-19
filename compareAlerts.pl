@@ -5,9 +5,9 @@
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,7 @@
 # Author	:	Nga Tran
 # Date  	:	Aug, 2004
 # Purposes	:
-#	. Comparing 2 pairs of outputs (original one <> new one) 
+#	. Comparing 2 pairs of outputs (original one <> new one)
 #     For every pair:
 #  	   . Get all tuples from the original accident alerts that do
 #		not  exist in the new one
@@ -30,7 +30,7 @@
 #
 #	   . Get all tuples from the original toll alerts that do not
 #		exist in the new one
-#	   . Get all tuples from the originalnew toll alerts that do 
+#	   . Get all tuples from the originalnew toll alerts that do
 #		not exist in the original
 # Modified history :
 #      Name        Date           Comment
@@ -93,7 +93,7 @@ sub createIndex
    my $startTime = time;
 
    $dbh->do("CREATE INDEX tollAccIdx1 ON tollAccAlerts(time, carid, accidentSeg);");
-   $dbh->do("CREATE INDEX tollAccIdx2 ON tollAccAlerts(time, carid);");   
+   $dbh->do("CREATE INDEX tollAccIdx2 ON tollAccAlerts(time, carid);");
 
    my $runningTime =  time - $startTime;
    writeToLog($logFile, $logVar,  "     createIndex running time:  $runningTime\n");
@@ -111,7 +111,7 @@ sub accAlertNotInValidator
    my $startTime = time;
 
    $dbh->do("TRUNCATE TABLE accAlertNotInValidator");
-   
+
    my $sql =  "INSERT INTO  accAlertNotInValidator
                SELECT time, carid, seg
                FROM   accidentAlerts
@@ -124,7 +124,7 @@ sub accAlertNotInValidator
                       acc1.seg = acc2.accidentSeg;";
 
    my $statement = $dbh->prepare($sql);
-   $statement->execute;      
+   $statement->execute;
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
@@ -143,7 +143,7 @@ sub accAlertNotInOriginal
    my $startTime = time;
 
    $dbh->do("TRUNCATE TABLE accAlertNotInOriginal");
-   
+
    my $sql =  "INSERT INTO  accAlertNotInOriginal
                SELECT time, carid, accidentSeg
                FROM   tollAccAlerts
@@ -157,7 +157,7 @@ sub accAlertNotInOriginal
                       acc1.accidentSeg = acc2.seg;";
 
    my $statement = $dbh->prepare($sql);
-   $statement->execute;      
+   $statement->execute;
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
@@ -175,7 +175,7 @@ sub accAlertDifferentSegment
    my $startTime = time;
 
    $dbh->do("TRUNCATE TABLE accAlertDifferentSegment");
-   
+
    my $sql =  "INSERT INTO accAlertDifferentSegment
                SELECT acc1.time, acc1.carid, acc1.seg, acc2.accidentSeg
                FROM   accidentAlerts AS acc1,
@@ -185,7 +185,7 @@ sub accAlertDifferentSegment
                       acc1.seg <> acc2.accidentSeg;";
 
    my $statement = $dbh->prepare($sql);
-   $statement->execute;      
+   $statement->execute;
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
@@ -193,7 +193,7 @@ sub accAlertDifferentSegment
 }
 
 #------------------------------------------------------------------------
-# Get all (time, carid) that have different LAV 
+# Get all (time, carid) that have different LAV
 #------------------------------------------------------------------------
 sub tollAlertDifferentLav
 {
@@ -202,7 +202,7 @@ sub tollAlertDifferentLav
    my $startTime = time;
 
    $dbh->do("TRUNCATE TABLE tollAlertDifferentLav");
-   
+
    my $sql =  "INSERT INTO tollAlertDifferentLav
                SELECT toll1.time,
                       toll1.carid,
@@ -215,7 +215,7 @@ sub tollAlertDifferentLav
                       toll1.lav <> toll2.lav;";
 
    my $statement = $dbh->prepare($sql);
-   $statement->execute;      
+   $statement->execute;
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
@@ -233,7 +233,7 @@ sub tollAlertDifferentToll
    my $startTime = time;
 
    $dbh->do("TRUNCATE TABLE tollAlertDifferentToll");
-   
+
    my $sql =  "INSERT INTO tollAlertDifferentToll
                SELECT toll1.time,
                       toll1.carid,
@@ -246,7 +246,7 @@ sub tollAlertDifferentToll
                       toll1.toll <> toll2.toll;";
 
    my $statement = $dbh->prepare($sql);
-   $statement->execute;      
+   $statement->execute;
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
@@ -263,12 +263,12 @@ sub tollAlertNotInValidator
    my $startTime = time;
 
    $dbh->do("TRUNCATE TABLE tollAlertNotInValidator");
-   
+
    my $sql =  "INSERT INTO  tollAlertNotInValidator
                SELECT time, carid
                FROM   tollAlerts
                EXCEPT
-               SELECT toll1.time, toll1.carid 
+               SELECT toll1.time, toll1.carid
                FROM   tollAlerts AS toll1,
                       tollAccAlerts AS toll2
                WHERE  toll1.time = toll2.time AND
@@ -277,7 +277,7 @@ sub tollAlertNotInValidator
                       toll1.toll = toll2.toll;";
 
    my $statement = $dbh->prepare($sql);
-   $statement->execute;      
+   $statement->execute;
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
@@ -286,7 +286,7 @@ sub tollAlertNotInValidator
 
 
 #------------------------------------------------------------------------
-# Get all tuples from the originalnew toll alerts that do 
+# Get all tuples from the originalnew toll alerts that do
 #		not exist in the original
 #------------------------------------------------------------------------
 sub tollAlertNotInOriginal
@@ -296,7 +296,7 @@ sub tollAlertNotInOriginal
    my $startTime = time;
 
    $dbh->do("TRUNCATE TABLE tollAlertNotInOriginal");
-   
+
    my $sql =  "INSERT INTO  tollAlertNotInOriginal
                SELECT time, carid
                FROM   tollAccAlerts
@@ -310,7 +310,7 @@ sub tollAlertNotInOriginal
                       toll1.toll = toll2.toll;";
 
    my $statement = $dbh->prepare($sql);
-   $statement->execute;      
+   $statement->execute;
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
@@ -325,21 +325,21 @@ sub results
 
    my $startTime = time;
    my $isDifferent = 0;
-   
+
    my $sql =  "SELECT count (*) from accAlertNotInValidator;";
    my $statement = $dbh->prepare($sql);
-   $statement->execute; 
+   $statement->execute;
    my @row = $statement->fetchrow_array;
    $statement->finish;
    if ($row[0] > 0) {
       $isDifferent = 1;
       print "     * There are more accident alerts in the original\n";
-      writeToLog($logFile, $logVar, "     *** There are more accident alerts in the original. Wrong answers stored in accAlertsNotInOriginal table\n"); 
+      writeToLog($logFile, $logVar, "     *** There are more accident alerts in the original. Wrong answers stored in accAlertsNotInOriginal table\n");
    }
 
    $sql =  "SELECT count (*) from accAlertNotInOriginal;";
    $statement = $dbh->prepare($sql);
-   $statement->execute; 
+   $statement->execute;
    @row = $statement->fetchrow_array;
    $statement->finish;
    if ($row[0] > 0) {
@@ -361,7 +361,7 @@ sub results
 
 #   $sql =  "SELECT count (*) from accAlertDifferentSegment;";
 #   $statement = $dbh->prepare($sql);
-#   $statement->execute; 
+#   $statement->execute;
 #   @row = $statement->fetchrow_array;
 #   $statement->finish;
 #   if ($row[0] > 0) {
@@ -372,7 +372,7 @@ sub results
 
 #   $sql =  "SELECT count (*) from tollAlertDifferentLav;";
 #   $statement = $dbh->prepare($sql);
-#   $statement->execute; 
+#   $statement->execute;
 #   @row = $statement->fetchrow_array;
 #   $statement->finish;
 #   if ($row[0] > 0) {
@@ -382,7 +382,7 @@ sub results
 
 #   $sql =  "SELECT count (*) from tollAlertDifferentToll;";
 #   $statement = $dbh->prepare($sql);
-#   $statement->execute; 
+#   $statement->execute;
 #   @row = $statement->fetchrow_array;
 #   $statement->finish;
 #   if ($row[0] > 0) {
@@ -393,7 +393,7 @@ sub results
 
    $sql =  "SELECT count (*) from tollAlertNotInValidator;";
    $statement = $dbh->prepare($sql);
-   $statement->execute; 
+   $statement->execute;
    @row = $statement->fetchrow_array;
    $statement->finish;
    if ($row[0] > 0) {
@@ -405,7 +405,7 @@ sub results
 
    $sql =  "SELECT count (*) from tollAlertNotInOriginal;";
    $statement = $dbh->prepare($sql);
-   $statement->execute; 
+   $statement->execute;
    @row = $statement->fetchrow_array;
    $statement->finish;
    if ($row[0] > 0) {

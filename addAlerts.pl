@@ -5,9 +5,9 @@
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -63,7 +63,7 @@ eval
    insertAlerts($dbh);
 
    my $runningTime = time - $startTime;
-   writeToLog($logFile, $logVar, "Total addAlerts running time: $runningTime seconds\n\n");     
+   writeToLog($logFile, $logVar, "Total addAlerts running time: $runningTime seconds\n\n");
 };
 print $@;
 
@@ -83,7 +83,7 @@ sub  insertAlerts
               SELECT * from tollAccAlerts;";
 
    my $statment = $dbh->prepare($sql);
-   $statment->execute;  
+   $statment->execute;
    $dbh->commit;
 
    my $runningTime = time - $startTime;

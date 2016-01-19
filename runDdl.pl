@@ -5,9 +5,9 @@
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,10 +18,10 @@
 # Please consider the following "Modified history" a legacy revision management
 # which has been taken over by git
 ####################################################################
-# Author	:	Nga Tran
-# Date   	:	Aug, 2004
-# Purposes	:
-#	. Drop/Create tables and Indexes
+# Author    :   Nga Tran
+# Date      :   Aug, 2004
+# Purposes  :
+#   . Drop/Create tables and Indexes
 # Modified history :
 #      Name        Date           Comment
 #      -------     -----------    ---------------------------------
@@ -75,7 +75,7 @@ exit(0);
 
 sub createAccidentTable
 {
-   my ($dbh) = @_; 
+   my ($dbh) = @_;
 
    $dbh->do("DROP TABLE accident;");
 
@@ -84,11 +84,11 @@ sub createAccidentTable
 #               carid2 integer,
 #               firstMinute integer,
 #               lastMinute integer,
-#               xway integer,               
+#               xway integer,
 #               dir integer,
 #               seg integer,
 #               pos integer,
-#               PRIMARY KEY (xway, dir, pos, firstMinute) 
+#               PRIMARY KEY (xway, dir, pos, firstMinute)
 #              );");
 
    $dbh->do("CREATE TABLE accident(
@@ -99,7 +99,7 @@ sub createAccidentTable
                dir integer,
                seg integer,
                pos integer,
-               PRIMARY KEY ( dir, pos, firstMinute) 
+               PRIMARY KEY ( dir, pos, firstMinute)
               );");
 }
 
@@ -107,27 +107,27 @@ sub createAccidentTable
 
 sub createStatisticsTable
 {
-   my ($dbh) = @_; 
+   my ($dbh) = @_;
 
    $dbh->do("DROP TABLE statistics;");
 
 #   $dbh->do("CREATE TABLE statistics(
-#	          xway integer,
-#	          dir  integer,
-#	          seg  integer,
-#	          minute integer,
-#	          numvehicles  integer,
-#	          lav   integer,
+#             xway integer,
+#             dir  integer,
+#             seg  integer,
+#             minute integer,
+#             numvehicles  integer,
+#             lav   integer,
 #                 toll  integer,
 #                 accident integer,
 #                 accidentSeg integer);");
 
    $dbh->do("CREATE TABLE statistics(
-	          dir  integer,
-	          seg  integer,
-	          minute integer,
-	          numvehicles  integer,
-	          lav   integer,
+              dir  integer,
+              seg  integer,
+              minute integer,
+              numvehicles  integer,
+              lav   integer,
                   toll  integer,
                   accident integer,
                   accidentSeg integer);");
@@ -138,28 +138,28 @@ sub createStatisticsTable
 
 sub createTollAccAlertsTable
 {
-   my ($dbh) = @_; 
+   my ($dbh) = @_;
 
    $dbh->do("DROP TABLE tollAccAlerts;");
 
-#   $dbh->do("CREATE TABLE TollAccAlerts(   
-#  	          time   INTEGER,
-#  	          carid  INTEGER,
-#   	         xway   INTEGER,
-#  	          dir    INTEGER,
-#  	          seg    INTEGER,
-#  	          lav    INTEGER,
-#  	          toll   INTEGER,
-#  	          accidentSeg INTEGER);");
+#   $dbh->do("CREATE TABLE TollAccAlerts(
+#             time   INTEGER,
+#             carid  INTEGER,
+#             xway   INTEGER,
+#             dir    INTEGER,
+#             seg    INTEGER,
+#             lav    INTEGER,
+#             toll   INTEGER,
+#             accidentSeg INTEGER);");
 
-   $dbh->do("CREATE TABLE TollAccAlerts(   
-  	          time   INTEGER,
-  	          carid  INTEGER,
-  	          dir    INTEGER,
-  	          seg    INTEGER,
-  	          lav    INTEGER,
-  	          toll   INTEGER,
-  	          accidentSeg INTEGER);");
+   $dbh->do("CREATE TABLE TollAccAlerts(
+              time   INTEGER,
+              carid  INTEGER,
+              dir    INTEGER,
+              seg    INTEGER,
+              lav    INTEGER,
+              toll   INTEGER,
+              accidentSeg INTEGER);");
 
 }
 
@@ -167,7 +167,7 @@ sub createTollAccAlertsTable
 
 sub createComparedTables
 {
-   my ($dbh) = @_; 
+   my ($dbh) = @_;
 
    $dbh->do("DROP TABLE accAlertNotInValidator;");
    $dbh->do("DROP TABLE accAlertNotInOriginal;");
@@ -196,17 +196,17 @@ sub createComparedTables
 #--------------------------------------------------------------------------------
 
 sub logTime {
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-	return ( ($mon+1)."-".$mday."-".($year+1900)." ".$hour.":".$min.":".$sec );
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
+    return ( ($mon+1)."-".$mday."-".($year+1900)." ".$hour.":".$min.":".$sec );
 }
 
 
 sub writeToLog {
-	my ( $logfile, $logvar, $logmessage ) = @_;
-	if ($logvar eq "yes") {
-		open( LOGFILE1, ">>$logfile")  || die("Could not open file: $!");
-		LOGFILE1->autoflush(1);
-		print LOGFILE1 ( logTime()."> $logmessage"."\n");
-		close (LOGFILE1);
-	}
+    my ( $logfile, $logvar, $logmessage ) = @_;
+    if ($logvar eq "yes") {
+        open( LOGFILE1, ">>$logfile")  || die("Could not open file: $!");
+        LOGFILE1->autoflush(1);
+        print LOGFILE1 ( logTime()."> $logmessage"."\n");
+        close (LOGFILE1);
+    }
 }

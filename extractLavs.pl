@@ -5,9 +5,9 @@
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -61,9 +61,9 @@ eval {
    my $startTime = time;
 
    createTmpTables($dbh);
-   preLav($dbh);   
+   preLav($dbh);
    indexPreLav($dbh);
-   lav($dbh); 
+   lav($dbh);
    noLav($dbh);
    dropTmpTables($dbh);
 
@@ -83,8 +83,8 @@ exit(0);
 
 sub createTmpTables
 {
-   my ($dbh) = @_;  
-          
+   my ($dbh) = @_;
+
 #   $dbh->do("
 #          CREATE TABLE preLav(
 #               xway integer,
@@ -92,9 +92,9 @@ sub createTmpTables
 #               seg  integer,
 #               minute integer,
 #               lav  float);");
-           
+
    $dbh->do("
-          CREATE TABLE preLav( 
+          CREATE TABLE preLav(
                dir  integer,
                seg  integer,
                minute integer,
@@ -110,7 +110,7 @@ sub createTmpTables
 sub dropTmpTables
 {
    my ($dbh) = @_;
-   $dbh->do("DROP TABLE preLav;");   
+   $dbh->do("DROP TABLE preLav;");
    $dbh->commit;
 }
 
@@ -124,8 +124,8 @@ sub preLav
    my ($dbh) = @_;
 
    my $startTime = time;
-   
-#   my $sql =  "INSERT INTO prelav 
+
+#   my $sql =  "INSERT INTO prelav
 #               SELECT xway, dir, seg,  minute, avg(speed)
 #               FROM   (SELECT   xway AS xway,
 #                                dir AS dir,
@@ -138,7 +138,7 @@ sub preLav
 #                        GROUP BY  xway, dir, seg, carid, minute) AS filter
 #               GROUP BY xway, dir, seg,  minute;";
 
-   my $sql =  "INSERT INTO prelav 
+   my $sql =  "INSERT INTO prelav
                SELECT dir, seg,  minute, avg(speed)
                FROM   (SELECT   dir AS dir,
                                 seg AS seg,
@@ -151,7 +151,7 @@ sub preLav
                GROUP BY dir, seg,  minute;";
 
    my $statement = $dbh->prepare($sql);
-   $statement->execute;      
+   $statement->execute;
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
@@ -168,7 +168,7 @@ sub indexPreLav
    my ($dbh) = @_;
 
    my $startTime = time;
-   
+
 #   $dbh->do("CREATE UNIQUE INDEX preLavIdx1
 #             ON preLav (xway, dir, seg, minute);");
 
@@ -186,7 +186,7 @@ sub indexPreLav
 #------------------------------------------------------------------------
 sub lav
 {
-   my ($dbh) = @_; 
+   my ($dbh) = @_;
 
    my $startTime = time;
 
@@ -222,8 +222,8 @@ sub lav
 
 sub noLav
 {
-   my ($dbh) = @_;  
-          
+   my ($dbh) = @_;
+
    my $startTime = time;
 
    my $sql =  "UPDATE statistics
@@ -231,7 +231,7 @@ sub noLav
                WHERE  lav IS NULL;";
 
    my $statement = $dbh->prepare($sql);
-   $statement->execute;      
+   $statement->execute;
    $dbh->commit;
 
    my $runningTime =  time - $startTime;

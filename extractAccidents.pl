@@ -5,9 +5,9 @@
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -66,7 +66,7 @@ eval {
    cutDownTuples($dbh);
    createIndexes($dbh);
    extractAccidentTuples($dbh);
-   getAccidentsInfo($dbh);   
+   getAccidentsInfo($dbh);
    dropTmpTables($dbh);
 
    my $endTime = time;
@@ -95,8 +95,8 @@ sub initData
 
 sub createTmpTables
 {
-   my ($dbh) = @_;  
- 
+   my ($dbh) = @_;
+
 #   $dbh->do("
 #          CREATE TABLE preAccident1(
 #               time integer,
@@ -107,8 +107,8 @@ sub createTmpTables
 #               seg integer,
 #               pos integer
 #           ); ");
-           
-#    $dbh->do("           
+
+#    $dbh->do("
 #           CREATE TABLE preAccident2(
 #               carid1 integer,
 #               carid2 integer,
@@ -118,7 +118,7 @@ sub createTmpTables
 #               seg integer,
 #               pos integer
 #             ); ");
-             
+
    $dbh->do("
           CREATE TABLE preAccident1(
                time integer,
@@ -128,9 +128,9 @@ sub createTmpTables
                seg integer,
                pos integer
            ); ");
-           
 
-    $dbh->do("           
+
+    $dbh->do("
            CREATE TABLE preAccident2(
                carid1 integer,
                carid2 integer,
@@ -165,7 +165,7 @@ sub cutDownTuples
    my ($dbh) = @_;
 
    my $startTime = time;
-   
+
 #   my $sql =  "INSERT INTO preAccident1
 #               SELECT  time,
 #                       carid,
@@ -175,7 +175,7 @@ sub cutDownTuples
 #                       seg,
 #                       pos
 #               FROM    input
-#               WHERE   speed = 0 AND                       
+#               WHERE   speed = 0 AND
 #                       type = 0;";
 
   my $sql =  "INSERT INTO preAccident1
@@ -186,7 +186,7 @@ sub cutDownTuples
                        seg,
                        pos
                FROM    input
-               WHERE   speed = 0 AND                       
+               WHERE   speed = 0 AND
                        type = 0;";
 
    my $statement = $dbh->prepare($sql);
@@ -206,7 +206,7 @@ sub createIndexes
    my ($dbh) = @_;
 
    my $startTime = time;
-   
+
 #    $dbh->do("CREATE INDEX preAcc1Idx1
 #             ON preAccident1 (carid, pos, xway, lane, dir);");
 
@@ -241,7 +241,7 @@ sub createIndexes
 # Extract tuples of accident cars from "preAccident1" table
 # This tuple from 2 different cars emitted same xway, lane, dir,
 # seg and pos
-# On extract tuples of real accident (after report same 
+# On extract tuples of real accident (after report same
 # position in 4 consecutive reports)
 #------------------------------------------------------------------------
 
@@ -268,7 +268,7 @@ sub extractAccidentTuples
 #                       in2.xway = in1.xway AND
 #                       in2.lane = in1.lane AND
 #                       in2.dir = in1.dir AND
-#                       in2.time >= in1.time AND 
+#                       in2.time >= in1.time AND
 #                       in2.time <= in1.time + $EMITTED_DURATION AND
 #                       in11.carid = in1.carid AND
 #                       in11.pos = in1.pos AND
@@ -295,18 +295,18 @@ sub extractAccidentTuples
                        preAccident1 AS in11,
                        preAccident1 AS in22
                WHERE   in2.carid <> in1.carid AND
-                       in2.pos = in1.pos AND                       
+                       in2.pos = in1.pos AND
                        in2.lane = in1.lane AND
                        in2.dir = in1.dir AND
-                       in2.time >= in1.time AND 
+                       in2.time >= in1.time AND
                        in2.time <= in1.time + $EMITTED_DURATION AND
                        in11.carid = in1.carid AND
-                       in11.pos = in1.pos AND                       
+                       in11.pos = in1.pos AND
                        in11.lane = in1.lane AND
                        in11.dir = in1.dir AND
                        in11.time = in1.time + $ACCIDENT_DURATION AND
                        in22.carid = in2.carid AND
-                       in22.pos = in1.pos AND                       
+                       in22.pos = in1.pos AND
                        in22.lane = in1.lane AND
                        in22.dir = in1.dir AND
                        in22.time = in2.time + $ACCIDENT_DURATION;";
@@ -315,7 +315,7 @@ sub extractAccidentTuples
    $statement->execute;
 
    $dbh->commit;
-   
+
    my $runningTime =  time - $startTime;
    writeToLog($logFile, $logVar, "     extractAccidentTuples running time:  $runningTime\n");
 
@@ -335,15 +335,15 @@ sub getAccidentsInfo
    my ($dbh) = @_;
 
    my $startTime = time;
-   
+
 #   my $sql =  "INSERT INTO accident
 #               SELECT   min(carid1),
 #                        max(carid2),
-#                        trunc((min(time) + 90)/60) + 1, 
+#                        trunc((min(time) + 90)/60) + 1,
 #                        trunc((max(time) + $ACCIDENT_DURATION)/60) + 1,
 #                        xway,
 #                        dir,
-#                        seg, 
+#                        seg,
 #                        pos
 #               FROM     preAccident2
 #               GROUP BY
@@ -355,13 +355,13 @@ sub getAccidentsInfo
    my $sql =  "INSERT INTO accident
                SELECT   min(carid1),
                         max(carid2),
-                        trunc((min(time) + 90)/60) + 1, 
+                        trunc((min(time) + 90)/60) + 1,
                         trunc((max(time) + $ACCIDENT_DURATION)/60) + 1,
                         dir,
-                        seg, 
+                        seg,
                         pos
                FROM     preAccident2
-               GROUP BY                        
+               GROUP BY
                         dir,
                         seg,
                         pos;";
@@ -370,7 +370,7 @@ sub getAccidentsInfo
    $statement->execute;
 
    $dbh->commit;
-   
+
    my $runningTime =  time - $startTime;
    writeToLog($logFile, $logVar, "     getAccidentsInfo running time:  $runningTime\n");
 }

@@ -5,9 +5,9 @@
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,7 +60,7 @@ eval {
 
    # get maximun expressway
    $maxXway = getMaxXway($dbh);
-   
+
    print "Max xway: $maxXway\n";
 
    if ($maxXway > 0){
@@ -89,21 +89,21 @@ eval {
       # Create indexes for input
        createInputIndexes($dbh);
        print "create input indexes done\n";
-       
+
 
        # generate toll and accident alerts for xway $i
        system("perl generateAlerts.pl $dbName $userName $password $logFile $logVar");
        print "generate Alerts done\n";
 
-      
-       if ($maxXway > 0 ){ 
+
+       if ($maxXway > 0 ){
           # more than 1 xways, insert the alerts into Tmp table
-          system ("perl addAlerts.pl $dbName $userName $password $logFile $logVar");    
+          system ("perl addAlerts.pl $dbName $userName $password $logFile $logVar");
           print " addAlerts.pl done\n";
 
       }
    }
-  
+
 
    if ($maxXway > 0){
       dropInput($dbh);
@@ -112,12 +112,12 @@ eval {
        print "renameInputTmpTable done\n";
 
       # rename tollAccAlertsTmp to tollAccAlerts
-      system("perl renameAlertTmpTables.pl $dbName $userName $password $logFile $logVar");      
+      system("perl renameAlertTmpTables.pl $dbName $userName $password $logFile $logVar");
        print "renameAlertTmpTables.pl done\n";
    }
 
    my $runningTime = time - $startTime;
-   writeToLog($logFile, $logVar, "Total xwayLoop running time: $runningTime seconds\n\n");     
+   writeToLog($logFile, $logVar, "Total xwayLoop running time: $runningTime seconds\n\n");
 
 };
 print$@;
@@ -141,7 +141,7 @@ sub  getMaxXway
       my $sql = "SELECT max(xway) FROM input;";
 
       my $statement = $dbh->prepare($sql);
-      $statement->execute;  
+      $statement->execute;
 
       if (my @row = $statement->fetchrow_array) {
           $maxXway = $row[0];
@@ -254,7 +254,7 @@ sub  extractInput
                  WHERE xway = $xway;";
 
       my $statment = $dbh->prepare($sql);
-      $statment->execute;  
+      $statment->execute;
       $dbh->commit;
 
       my $runningTime = time - $startTime;

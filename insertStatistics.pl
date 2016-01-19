@@ -5,9 +5,9 @@
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -63,7 +63,7 @@ eval {
    createIndexes($dbh);
 
    my $runningTime =  time - $startTime;
-  writeToLog($logFile, $logVar, "Total insertStatistics running time:  $runningTime\n\n");   
+  writeToLog($logFile, $logVar, "Total insertStatistics running time:  $runningTime\n\n");
 };
 print $@;   # Print out errors
 $dbh->disconnect;
@@ -78,9 +78,9 @@ sub insertData
    my ($dbh) = @_;
 
    my $startTime = time;
-   
+
    # Delete all data in the table
-   $dbh->do("TRUNCATE TABLE statistics;");   
+   $dbh->do("TRUNCATE TABLE statistics;");
    $dbh->commit;
 
 #   my $sql =  "INSERT INTO statistics(xway, dir, seg, minute, numvehicles)
@@ -119,7 +119,7 @@ sub createIndexes
    my ($dbh) = @_;
 
    my $startTime = time;
-   
+
 #   $dbh->do("CREATE UNIQUE INDEX statisticsIdx1
 #             ON statistics (xway, dir, seg, minute);");
 
