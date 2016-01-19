@@ -46,7 +46,7 @@ remove_log_value_map = {True: "yes", False: "no"}
     database_user=("the database user", "option"),
     database_password=("the database password", "option"),
 )
-def main(base_dir_path=validate_globals.base_dir_path_default, remove_log=False, log_file_name=log_file_name_default, database_name=database_name_default, database_user=database_user_default, database_password=database_password_default):
+def main(base_dir_path=validate_globals.base_dir_path_default, remove_log=False, log_file_name=validate_globals.log_file_name_default, database_name=validate_globals.database_name_default, database_user=validate_globals.database_user_default, database_password=validate_globals.database_password_default):
     if not os.path.exists(base_dir_path):
         logger.info("creating inexisting base directory '%s'" % (base_dir_path,))
         os.makedirs(base_dir_path)
@@ -54,7 +54,7 @@ def main(base_dir_path=validate_globals.base_dir_path_default, remove_log=False,
         raise ValueError("base directory '%s' is an existing file, but needs to be a directory" % (base_dir_path,))
     t = Template(file=os.path.realpath(os.path.join(__file__, "..", "validate.config.tmpl")))
     t_file_path = os.path.realpath(os.path.join(__file__, "..", "validate.config"))
-    t.base_dir_path = base_dir_path
+    t.base_dir = base_dir_path
     t.keep_log = remove_log_value_map[not remove_log] #see internal implementation notes below
     t.log_file_name = log_file_name
     t.database_name = database_name
