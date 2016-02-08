@@ -26,6 +26,9 @@ cd template-helper && python setup.py build && sudo python setup.py install && c
 sudo apt-get update
 # can't be installed via pip:
 sudo apt-get install python-augeas
+# `import pexpect` fails on travis because `ptyprocess` can't be found; until it's clarified that this isn't a travis-only issue keep
+# statement for manual install here
+sudo pip install ptyprocess
 # install zero-conf `cpan` installer `cpanminus` doesn't skip configuration ->
 # managed with `pexpect` in `bootstrap.py` which is more coherent anyway
 sudo python bootstrap.py

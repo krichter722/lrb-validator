@@ -27,9 +27,9 @@ from setuptools import setup, find_packages
 from pkg_resources import parse_version
 
 setup(
-    name = "template-helper",
+    name = "lrb-validator",
     version_command = ("git describe --tags", "pep440-git"),
     packages = ["."],
     setup_requires = ["setuptools-version-command>=2.2"],
-    install_requires = ["template-helper>=1.0a0", "python-essentials>=1.1.5.post9", "psycopg2", "pexpect", "plac"]
+    install_requires = ["template-helper>=1.0a0", "python-essentials>=1.1.5.post9", "psycopg2", "pexpect", "plac", "Cheetah"]
 )
