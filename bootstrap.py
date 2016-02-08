@@ -59,14 +59,17 @@ def bootstrap(cpan=cpan_default):
     cpan_proc = pexpect.spawn(str.join(" ", [cpan]+cpan_packages))
     cpan_proc.logfile = sys.stdout
     cpan_proc.timeout = 10000000
-    cpan_proc.expect(['\\[yes\\]'])
-    cpan_proc.sendline("yes")
-    cpan_proc.expect(['\\[local::lib\\]']) # need to add surrounding [] in order to
-         # avoid double match
-    cpan_proc.sendline("sudo")
-    cpan_proc.expect(["\\[yes\\]"])
-    cpan_proc.sendline("yes")
-    cpan_proc.expect(pexpect.EOF) # wait for termination
+    expect_result = cpan_proc.expect(['\\[yes\\]',
+        pexpect.EOF # if already installed
+        ])
+    if expect_result == 0:
+        cpan_proc.sendline("yes")
+        cpan_proc.expect(['\\[local::lib\\]']) # need to add surrounding [] in order to
+             # avoid double match
+        cpan_proc.sendline("sudo")
+        cpan_proc.expect(["\\[yes\\]"])
+        cpan_proc.sendline("yes")
+        cpan_proc.expect(pexpect.EOF) # wait for termination
     if check_os.check_debian() or check_os.check_ubuntu():
         pm_utils.install_packages(["postgresql"])
     else:
