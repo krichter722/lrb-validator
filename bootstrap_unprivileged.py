@@ -47,6 +47,11 @@ postgres_default = "/usr/lib/postgresql/9.4/bin/postgres"
 psql_default = "/usr/lib/postgresql/9.4/bin/psql"
 createdb_default = "/usr/lib/postgresql/9.4/bin/createdb"
 
+shutdown_event = threading.Event()
+def handler(signum, frame):
+    logger.info("received SIGINT, terminating database process")
+    shutdown_event.set()
+
 def bootstrap_unprivileged(initdb=initdb_default, postgres=postgres_default, createdb=createdb_default, base_dir_path=validate_globals.base_dir_path_default, db_name=validate_globals.database_name_default, db_user=validate_globals.database_user_default, db_pass=validate_globals.database_password_default, shutdown_server=False):
     # generate validate.config
     generate_validate_config.generate_validate_config()
@@ -64,25 +69,27 @@ def bootstrap_unprivileged(initdb=initdb_default, postgres=postgres_default, cre
     class DBThread(threading.Thread):
         def __init__(self):
             super(DBThread, self).__init__()
-            self.running = True
         def run(self):
             logger.debug("starting PostgreSQL server")
             db_server_proc = sp.Popen([postgres, "-D", db_dir_path, "-k", "/tmp"])
-            while self.running and db_server_proc.poll() == None:
+            while not shutdown_event.is_set() and db_server_proc.poll() == None:
                 time.sleep(1) # in python 3.x it might be better to use subprocess.Popen.wait with timeout because it used short sleeps of the asyncio module<ref>https://docs.python.org/3.4/library/subprocess.html#subprocess.Popen.wait</ref>
-            if not self.running:
+            if not not shutdown_event.is_set():
                 logger.debug("server shutdown requested")
             if db_server_proc.poll() == None:
-                db_server_proc.terminate()
+                db_server_proc.send_signal(signal.SIGINT)
+                try_1_time = 0
+                try_1_time_max = 5
+                try_1_interval = .5
+                while db_server_proc.poll() == None and try_1_time < try_1_time_max:
+                    try_1_time += try_1_interval
+                    time.sleep(try_1_interval)
+                if db_server_proc.poll() == None:
+                    db_server_proc.terminate()
             elif db_server_proc.returncode != 0:
                 raise RuntimeError("server process returned abnormally with code %d" % (db_server_proc.returncode,))
     db_thread = DBThread()
     db_thread.start()
-    logger.info("registering signal handler for SIGINT to shutdown database cleanly")
-    def handler(signum, frame):
-        logger.info("received SIGINT, terminating database process")
-        db_thread.running = False
-    signal.signal(signal.SIGINT, handler)
     try_time = 0
     try_time_max = 10 # time in seconds in which we try to connect to the server
     try_interval = .5
@@ -123,10 +130,15 @@ def bootstrap_unprivileged(initdb=initdb_default, postgres=postgres_default, cre
 %s
 %s""" % ("*"*(len(success_message)+4), "* %s *" % success_message, "*"*(len(success_message)+4)))
     logger.info("database is still running and can (and should) be used for LRB validator's validate.pl")
-    if shutdown_server and db_thread != None:
-        db_thread.running = False
-        logger.debug("waiting for server to terminate")
-        db_thread.join()
+    if shutdown_server:
+        if db_thread != None:
+            shutdown_event.set()
+            logger.debug("waiting for server to terminate")
+    else:
+        logger.info("registering signal handler for SIGINT to shutdown database cleanly")
+        signal.signal(signal.SIGINT, handler)
+    while db_thread.is_alive():
+        db_thread.join(timeout=0.1)
 
 def main():
     plac.call(bootstrap_unprivileged)
