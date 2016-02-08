@@ -31,6 +31,7 @@ import time
 import plac
 import os
 import generate_validate_config
+import signal
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -52,11 +53,13 @@ def bootstrap_unprivileged(initdb=initdb_default, postgres=postgres_default, cre
 
     # generate and start database
     db_dir_path = os.path.join(base_dir_path, "database")
+    created = False
     if not os.path.exists(db_dir_path):
         logger.debug("creating PostgreSQL database in '%s'" % (db_dir_path,))
         sp.check_call([initdb, db_dir_path])
+        created = True
     else:
-        logger.debug("skipping creation of existing database '%s'" % (db_dir_path,))
+        logger.debug("skipping creation of existing database '%s' (assuming the database is setup correctly which means that remaining rests of a crashed setup need to be removed manually)" % (db_dir_path,))
     db_server_proc = None
     class DBThread(threading.Thread):
         def __init__(self):
@@ -66,12 +69,20 @@ def bootstrap_unprivileged(initdb=initdb_default, postgres=postgres_default, cre
             logger.debug("starting PostgreSQL server")
             db_server_proc = sp.Popen([postgres, "-D", db_dir_path, "-k", "/tmp"])
             while self.running and db_server_proc.poll() == None:
-                time.sleep(1)
-            logger.debug("server shutdown requested")
+                time.sleep(1) # in python 3.x it might be better to use subprocess.Popen.wait with timeout because it used short sleeps of the asyncio module<ref>https://docs.python.org/3.4/library/subprocess.html#subprocess.Popen.wait</ref>
+            if not self.running:
+                logger.debug("server shutdown requested")
             if db_server_proc.poll() == None:
                 db_server_proc.terminate()
+            elif db_server_proc.returncode != 0:
+                raise RuntimeError("server process returned abnormally with code %d" % (db_server_proc.returncode,))
     db_thread = DBThread()
     db_thread.start()
+    logger.info("registering signal handler for SIGINT to shutdown database cleanly")
+    def handler(signum, frame):
+        logger.info("received SIGINT, terminating database process")
+        db_thread.running = False
+    signal.signal(signal.SIGINT, handler)
     try_time = 0
     try_time_max = 10 # time in seconds in which we try to connect to the server
     try_interval = .5
@@ -83,26 +94,29 @@ def bootstrap_unprivileged(initdb=initdb_default, postgres=postgres_default, cre
             conn = psycopg2.connect(dbname="postgres", host='/tmp', async=False)
             logger.debug("database connection established successfully")
             break
-        except:
+        except Exception as db_connect_ex:
             logger.debug("waiting another %d s for the server to come up" % (try_time_max-try_time,))
             try_time += try_interval
             time.sleep(try_interval)
-    cur = conn.cursor()
-    logger.debug("creating user %s" % (db_user,))
-    cur.execute("""create user %s with encrypted password '%s' login""" % (db_user, db_pass))
-    conn.commit()
-    logger.debug("creating database %s" % (db_name,))
-    createdb_proc = pexpect.spawn(str.join(" ", [createdb, "--owner=%s" % (db_user,), "-W", "--host=/tmp/", "--port=5432", db_name]))
-    createdb_proc.expect(['Password:', "Passwort:"])
-    createdb_proc.sendline(db_pass)
-    createdb_proc.expect(pexpect.EOF) # wait for termination
-    #conn = psycopg2.connect(dbname="postgres", host='/tmp', async=False)
-    #cur = conn.cursor()
-    logger.debug("granting permissions")
-    cur.execute("""grant all on database "%s" to %s""" % (db_name, db_user))
-    #cur.close()
-    #conn.close()
-    conn.commit()
+    if conn == None:
+        raise Exception("Database connection could repeatedly not be created due to (last exception) %s" % (str(db_connect_ex),))
+    if created:
+        cur = conn.cursor()
+        logger.debug("creating user %s" % (db_user,))
+        cur.execute("""create user %s with encrypted password '%s' login""" % (db_user, db_pass))
+        conn.commit()
+        logger.debug("creating database %s" % (db_name,))
+        createdb_proc = pexpect.spawn(str.join(" ", [createdb, "--owner=%s" % (db_user,), "-W", "--host=/tmp/", "--port=5432", db_name]))
+        createdb_proc.expect(['Password:', "Passwort:"])
+        createdb_proc.sendline(db_pass)
+        createdb_proc.expect(pexpect.EOF) # wait for termination
+        #conn = psycopg2.connect(dbname="postgres", host='/tmp', async=False)
+        #cur = conn.cursor()
+        logger.debug("granting permissions")
+        cur.execute("""grant all on database "%s" to %s""" % (db_name, db_user))
+        #cur.close()
+        #conn.close()
+        conn.commit()
     success_message = "Setup successful :)"
     logger.info("""
 %s
