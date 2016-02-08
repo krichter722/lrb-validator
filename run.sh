@@ -16,22 +16,15 @@
 # limitations under the License.
 #
 
-# Runs all necessary actions including all bootstrapping, installation of
-# prerequisites
+# Initializes the database if not already initialized (including creation of
+# user with appropriate permissions), starts the database server (including
+# waiting for the server to be available) and handles its graceful shutdown.
+#
+# The purpose of the script is to handle the fact that `validate.pl` does
+# neither start nor shutdown the database server it needs to run.
+#
+# Expects `run_once.sh` to have run once.
 
-python setup.py build
-sudo python setup.py install
-git submodule update --init
-cd template-helper && python setup.py build && sudo python setup.py install && cd ..
-sudo apt-get update
-# can't be installed via pip:
-sudo apt-get install python-augeas
-# `import pexpect` fails on travis because `ptyprocess` can't be found; until it's clarified that this isn't a travis-only issue keep
-# statement for manual install here
-sudo pip install ptyprocess
-# install zero-conf `cpan` installer `cpanminus` doesn't skip configuration ->
-# managed with `pexpect` in `bootstrap.py` which is more coherent anyway
-sudo python bootstrap.py
 python bootstrap_unprivileged.py &
 python_db_pid=$!
 echo "sleeping 10s to wait for the database server to be available"
