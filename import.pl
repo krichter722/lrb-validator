@@ -128,7 +128,7 @@ open( TEMP , "$accountBalance") || die("Could not open file '$accountBalance': $
 close( TEMP );
 open( TEMP , "$completeHistory") || die("Could not open file '$completeHistory': $!");
 close( TEMP );
-open( TEMP , "$tollAlerts") || die("Could not open file '$tollAlters': $!");
+open( TEMP , "$tollAlerts") || die("Could not open file '$tollAlerts': $!");
 close( TEMP );
 
 
