@@ -1,0 +1,12 @@
+# @TODO: specifying `language: python` causes `import pexpect` to fail in
+# `bootstrap_unprivileged.py`, but to succeed in `bootstrap.py` (although
+# `pexpect` is specified and installed in `setup.py` which doesn't happen when
+# `language: bash` is specified, but tests for different python versions whould
+# be nice as well
+language: bash
+sudo: required
+script:
+# necessary in order to work around failure of installation of `postgresql` with
+# `Refused to start PostgreSQL 9.5, because PostgreSQL 9.1 is currently running! You should first stop 9.1 instance...`<ref>https://richtercloud.de:446/dokuwiki/doku.php?id=web_services:travis-ci.org</ref>
+- yes | sudo apt-get remove postgresql-9.1
+- yes | ./run.sh

@@ -120,15 +120,15 @@ my $dbh  = DBI->connect(
 
 
 # check all files (if they are present) prior to continueing...just open and close
-open( TEMP , "$carDataInput") || die("Could not open file: $!");
+open( TEMP , "$carDataInput") || die("Could not open file '$carDataInput': $!");
 close( TEMP );
-open( TEMP , "$dailyExpenditure") || die("Could not open file: $!");
+open( TEMP , "$dailyExpenditure") || die("Could not open file '$dailyExpenditure': $!");
 close( TEMP );
-open( TEMP , "$accountBalance") || die("Could not open file: $!");
+open( TEMP , "$accountBalance") || die("Could not open file '$accountBalance': $!");
 close( TEMP );
-open( TEMP , "$completeHistory") || die("Could not open file: $!");
+open( TEMP , "$completeHistory") || die("Could not open file '$completeHistory': $!");
 close( TEMP );
-open( TEMP , "$tollAlerts") || die("Could not open file: $!");
+open( TEMP , "$tollAlerts") || die("Could not open file '$tollAlters': $!");
 close( TEMP );
 
 

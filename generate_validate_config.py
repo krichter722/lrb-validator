@@ -46,7 +46,7 @@ remove_log_value_map = {True: "yes", False: "no"}
     database_user=("the database user", "option"),
     database_password=("the database password", "option"),
 )
-def main(base_dir_path=validate_globals.base_dir_path_default, remove_log=False, log_file_name=log_file_name_default, database_name=database_name_default, database_user=database_user_default, database_password=database_password_default):
+def generate_validate_config(base_dir_path=validate_globals.base_dir_path_default, remove_log=False, log_file_name=validate_globals.log_file_name_default, database_name=validate_globals.database_name_default, database_user=validate_globals.database_user_default, database_password=validate_globals.database_password_default):
     if not os.path.exists(base_dir_path):
         logger.info("creating inexisting base directory '%s'" % (base_dir_path,))
         os.makedirs(base_dir_path)
@@ -67,4 +67,4 @@ def main(base_dir_path=validate_globals.base_dir_path_default, remove_log=False,
 # false flag and avoid touching the perl code
 
 if __name__ == "__main__":
-    plac.call(main)
+    plac.call(generate_validate_config)

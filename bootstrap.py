@@ -31,13 +31,13 @@ import plac
 import subprocess as sp
 import python_essentials.lib.check_os as check_os
 import python_essentials.lib.pm_utils as pm_utils
+import python_essentials.lib.os_utils as os_utils
 import logging
 import os
-import psycopg2
-import threading
-import time
 import validate_globals
 import pexpect
+import sys
+import re
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -49,80 +49,29 @@ logger.addHandler(logger_stdout_handler)
 
 # binaries
 cpan_default = "cpan"
-postgres_version = (9,4)
-initdb_default = "/usr/lib/postgresql/9.4/bin/initdb"
-postgres_default = "/usr/lib/postgresql/9.4/bin/postgres"
-psql_default = "/usr/lib/postgresql/9.4/bin/psql"
-createdb_default = "/usr/lib/postgresql/9.4/bin/createdb"
 
-def bootstrap(cpan=cpan_default, initdb=initdb_default, postgres=postgres_default, createdb=createdb_default, base_dir_path=validate_globals.base_dir_path_default, db_name=validate_globals.database_name_default, db_user=validate_globals.database_user_default, db_pass=validate_globals.database_password_default, shutdown_server=False):
-    sp.check_call([cpan, "DBD::PgPP", "Log::Log4perl"])
+def bootstrap(cpan=cpan_default):
+    if not os_utils.which(cpan):
+        raise ValueError("cpan binary '%s' doesn't exist or isn't executable" % (cpan,))
+    # there's seriously no smart way to avoid cpan questions without manipulating the local configurtion (which conflicts with the idea of making it possible to run the script locally and not only on CI services)
+    cpan_packages = ["DBD::PgPP", "Log::Log4perl"]
+    logger.info("installing %s with cpan '%s'" % (str(cpan_packages), cpan))
+    cpan_proc = pexpect.spawn(str.join(" ", [cpan]+cpan_packages))
+    cpan_proc.logfile = sys.stdout
+    cpan_proc.timeout = 10000000
+    cpan_proc.expect(['\\[yes\\]'])
+    cpan_proc.sendline("yes")
+    cpan_proc.expect(['\\[local::lib\\]']) # need to add surrounding [] in order to
+         # avoid double match
+    cpan_proc.sendline("sudo")
+    cpan_proc.expect(["\\[yes\\]"])
+    cpan_proc.sendline("yes")
+    cpan_proc.expect(pexpect.EOF) # wait for termination
     if check_os.check_debian() or check_os.check_ubuntu():
         pm_utils.install_packages(["postgresql"])
     else:
         raise ValueError("operating system not supported")
-    db_dir_path = os.path.join(base_dir_path, "database")
-    if not os.path.exists(db_dir_path):
-        logger.debug("creating PostgreSQL database in '%s'" % (db_dir_path,))
-        sp.check_call([initdb, db_dir_path])
-    else:
-        logger.debug("skipping creation of existing database '%s'" % (db_dir_path,))
-    db_server_proc = None
-    class DBThread(threading.Thread):
-        def __init__(self):
-            super(DBThread, self).__init__()
-            self.running = True
-        def run(self):
-            logger.debug("starting PostgreSQL server")
-            db_server_proc = sp.Popen([postgres, "-D", db_dir_path, "-k", "/tmp"])
-            while self.running and db_server_proc.poll() == None:
-                time.sleep(1)
-            logger.debug("server shutdown requested")
-            if db_server_proc.poll() == None:
-                db_server_proc.terminate()
-    db_thread = DBThread()
-    db_thread.start()
-    try_time = 0
-    try_time_max = 10 # time in seconds in which we try to connect to the server
-    try_interval = .5
-    # wait until the server is up (don't connect as db_user, because initially
-    # only the postgres user is available (and linear shouldn't be the
-    # maintenance user)
-    while try_time < try_time_max:
-        try:
-            conn = psycopg2.connect(dbname="postgres", host='/tmp', async=False)
-            logger.debug("database connection established successfully")
-            break
-        except:
-            logger.debug("waiting another %d s for the server to come up" % (try_time_max-try_time,))
-            try_time += try_interval
-            time.sleep(try_interval)
-    cur = conn.cursor()
-    logger.debug("creating user %s" % (db_user,))
-    cur.execute("""create user %s with encrypted password '%s' login""" % (db_user, db_pass))
-    conn.commit()
-    logger.debug("creating database %s" % (db_name,))
-    createdb_proc = pexpect.spawn(str.join(" ", [createdb, "--owner=%s" % (db_user,), "-W", "--host=/tmp/", "--port=5432", db_name]))
-    createdb_proc.expect(['Password:', "Passwort:"])
-    createdb_proc.sendline(db_pass)
-    createdb_proc.expect(pexpect.EOF) # wait for termination
-    #conn = psycopg2.connect(dbname="postgres", host='/tmp', async=False)
-    #cur = conn.cursor()
-    logger.debug("granting permissions")
-    cur.execute("""grant all on database "%s" to %s""" % (db_name, db_user))
-    #cur.close()
-    #conn.close()
-    conn.commit()
-    success_message = "Setup successful :)"
-    logger.info("""
-%s
-%s
-%s""" % ("*"*(len(success_message)+4), "* %s *" % success_message, "*"*(len(success_message)+4)))
-    logger.info("database is still running and can (and should) be used for LRB validator's validate.pl")
-    if shutdown_server and db_thread != None:
-        db_thread.running = False
-        logger.debug("waiting for server to terminate")
-        db_thread.join()
+    logger.info("You're ready to run `python bootstrap_unprivileged.py`")
 
 def main():
     plac.call(bootstrap)
