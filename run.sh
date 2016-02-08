@@ -42,4 +42,6 @@ echo "validate.pl returned with code $validate_return_code"
 echo "terminating python database process with PID $python_db_pid"
 # travis doesn't understand kill --signal
 $(which kill) -s SIGINT $python_db_pid
+echo "waiting for python database process to terminate"
+wait $python_db_pid
 exit $validate_return_code
