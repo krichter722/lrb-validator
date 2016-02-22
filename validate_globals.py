@@ -22,5 +22,6 @@ import os
 base_dir_path_default = os.path.join(os.path.expanduser("~"), ".lrb-validator")
 log_file_name_default = "lrb-validator.log"
 database_name_default = "dbxway01"
+database_host_default = "/tmp/lrb-validator/postgres.socket"
 database_user_default = "linear"
 database_password_default = "linear"

@@ -10,4 +10,4 @@ script:
 # `Refused to start PostgreSQL 9.5, because PostgreSQL 9.1 is currently running! You should first stop 9.1 instance...`<ref>https://richtercloud.de:446/dokuwiki/doku.php?id=web_services:travis-ci.org</ref>
 - yes | sudo apt-get remove postgresql-9.1
 - yes | ./run_once.sh
-- yes | ./run.sh
+- yes | python ./run.py

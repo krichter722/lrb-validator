@@ -43,10 +43,11 @@ remove_log_value_map = {True: "yes", False: "no"}
     remove_log=("whether the logs ought to be deleted right after the validation", "flag"),
     log_file_name=("the name of the logfile to be produced in base_dir_path", "option"),
     database_name=("the database name", "option"),
+    database_host=("the database host specification (TCP address or path to local socket)", "option"),
     database_user=("the database user", "option"),
     database_password=("the database password", "option"),
 )
-def generate_validate_config(base_dir_path=validate_globals.base_dir_path_default, remove_log=False, log_file_name=validate_globals.log_file_name_default, database_name=validate_globals.database_name_default, database_user=validate_globals.database_user_default, database_password=validate_globals.database_password_default):
+def generate_validate_config(base_dir_path=validate_globals.base_dir_path_default, remove_log=False, log_file_name=validate_globals.log_file_name_default, database_name=validate_globals.database_name_default, database_host=validate_globals.database_host_default, database_user=validate_globals.database_user_default, database_password=validate_globals.database_password_default):
     if not os.path.exists(base_dir_path):
         logger.info("creating inexisting base directory '%s'" % (base_dir_path,))
         os.makedirs(base_dir_path)
@@ -58,6 +59,7 @@ def generate_validate_config(base_dir_path=validate_globals.base_dir_path_defaul
     t.keep_log = remove_log_value_map[not remove_log] #see internal implementation notes below
     t.log_file_name = log_file_name
     t.database_name = database_name
+    t.database_host = database_host
     t.database_user = database_user
     t.database_password = database_password
     template_helper.write_template_file(str(t), t_file_path)

@@ -16,10 +16,10 @@ default for above mentioned OS).
   * run
         ./run_once.sh
     in order to setup and install prerequisites and then
-        ./run.sh
+        python ./run.py
     which will perform necessary setup of databases and tables, start the
     database server necessary for running `lrb-validator`, perform the
     validation itself and shutdown the database cleanly when finished
 
 After you've run `./run_once.sh` once, you don't need to run it anymore before
-running `./run.sh`.
+running `python ./run.py`.

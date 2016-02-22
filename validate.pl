@@ -26,10 +26,17 @@
 #      -------     -----------    ---------------------------------
 #      Nga         8/27/04        Split expressways
 ####################################################################
-use DBI;
+
+
 use strict;
+use warnings;
+use DBI;
 use FileHandle;
 use Getopt::Long;
+use Log::Log4perl qw(:easy);
+
+Log::Log4perl->easy_init($DEBUG);
+my $logger = Log::Log4perl->get_logger('lrb_validator.validate');
 
 my $verbose = 'Print verbose informtion';	# option variable with default value (false)
 my $debug = 'Print debug information (implies verbose)';	# option variable with default value (false)
@@ -107,39 +114,39 @@ close ( PROPERTIES );
 
 my $startTime = time;
 
-system ("perl dropalltables.pl $dbname $dbuser $dbpassword $logfile $logvar");
+system ("perl dropalltables.pl $dbname $dbuser $dbpassword $logfile $logvar") or $logger->logdie("dropalltables.pl failed (see preceeding output for details)");
 print "Drop table done\n";
 
-system ("perl import.pl $propertyfile");
+system ("perl import.pl $propertyfile") or $logger->logdie("import.pl failed (see preceeding output for details)");
 print "Import done\n";
 
-system ("perl indexes.pl $dbname $dbuser $dbpassword $logfile $logvar");
+system ("perl indexes.pl $dbname $dbuser $dbpassword $logfile $logvar") or $logger->logdie("indexes.pl failed (see preceeding output for details)");
 print "Indexes done\n";
 
 # Generate alerts
-system ("perl xwayLoop.pl $dbname $dbuser $dbpassword $logfile $logvar");
+system ("perl xwayLoop.pl $dbname $dbuser $dbpassword $logfile $logvar") or $logger->logdie("xwayLoop.pl failed (see preceeding output for details)");
 print "Loop done\n";
 
 #--> IGOR:  All this stuff should move to xwayLoop.pl if you want to split, otherwise it is OK
 # Split types
-system("perl splitbytype.pl $dbname $dbuser $dbpassword $logfile $logvar");
+system("perl splitbytype.pl $dbname $dbuser $dbpassword $logfile $logvar") or $logger->logdie("splitbytype.pl failed (see preceeding output for details)");
 print "split by type done\n";
 
-system ("perl accountBalanceAnswer.pl $dbname $dbuser $dbpassword $logfile $logvar");
+system ("perl accountBalanceAnswer.pl $dbname $dbuser $dbpassword $logfile $logvar") or $logger->logdie("accountBalanceAnswer.pl failed (see preceeding output for details)");
 print "account Balance done\n";
 
-system ("perl dailyExpenditureAnswer.pl $dbname $dbuser $dbpassword $logfile $logvar");
+system ("perl dailyExpenditureAnswer.pl $dbname $dbuser $dbpassword $logfile $logvar") or $logger->logdie("dailyExpenditureAnswer.pl failed (see preceeding output for details)");
 print "Daily expenditure done\n";
 
 
 # Validation
-system("perl compareAlerts.pl  $dbname $dbuser $dbpassword $logfile $logvar");
+system("perl compareAlerts.pl  $dbname $dbuser $dbpassword $logfile $logvar") or $logger->logdie("validation in compareAlters.pl failed (see preceeding output for details)");
 print "compare alerts table done\n";
 
-system ("perl accountBalanceValidation.pl $dbname $dbuser $dbpassword $logfile $logvar");
+system ("perl accountBalanceValidation.pl $dbname $dbuser $dbpassword $logfile $logvar") or $logger->logdie("validation in accountBalanceValidation.pl failed (see preceeding output for details)");
 print "accountBalanceValidation.pl done\n";
 
-system ("perl dailyExpenditureValidation.pl $dbname $dbuser $dbpassword $logfile $logvar");
+system ("perl dailyExpenditureValidation.pl $dbname $dbuser $dbpassword $logfile $logvar") or $logger->logdie("validation in dailyExpenditureValidation.pl failed (see preceeding output for details)");
 print "dailyExpenditureValidation.pl done\n";
 
 
