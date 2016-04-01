@@ -54,7 +54,6 @@ def run(perl="perl"):
         # be regenerated (e.g. after changes) with `generate_validate_config.py` (see
         # `generate_validate_config.py --help` for usage info)
         try:
-            sp.check_call([perl, "import.pl", "validate.config"])
             sp.check_call([perl, "validate.pl", "validate.config"])
         except sp.CalledProcessError as ex:
             logger.error("one of the perl scripts failed (see preceeding output for details) with exception '%s', trying to shutdown database server cleanly, then terminating" % (str(ex),))
