@@ -31,6 +31,10 @@
 use strict;
 use DBI qw(:sql_types);
 use FileHandle;
+use Log::Log4perl qw(:easy);
+
+Log::Log4perl->easy_init($DEBUG);
+my $logger = Log::Log4perl->get_logger('lrb_validator.import');
 
 #BEGIN {
 #    open (STDERR, ">>execution.log");
@@ -39,21 +43,22 @@ use FileHandle;
 # Process arguments
 my @arguments = @ARGV;
 my $dbName = shift(@arguments);
-my $userName = shift(@arguments);
-my $password = shift(@arguments);
+my $dbhost = shift(@arguments);
+my $dbuser = shift(@arguments);
+my $dbpassword = shift(@arguments);
 my $logFile = shift(@arguments);
 my $logVar = shift(@arguments);
 
-writeToLog($logFile, $logVar, "createAlerts in progress ...\n");
+$logger->info("createAlerts in progress ...\n");
 
 # Constants
 my $EXIT_LANE = 4;
 
 # Connect to Postgres database
-my $dbh = DBI->connect(
-            "DBI:PgPP:$dbName", "$userName", "$password",
-            {PrintError => 1, AutoCommit => 0}
-          ) || die "Could not connect to database:  $DBI::errstr";
+my $dbh  = DBI->connect(
+            "DBI:Pg:dbname=$dbname;host=$dbhost", "$dbuser", "$dbpassword",
+            {PrintError => 1}
+          ) || $logger->logdie("Could not connect to database:  $DBI::errstr");
 
 eval
 {
@@ -67,7 +72,7 @@ eval
    updateAccidentSegments($dbh);
 
    my $runningTime = time - $startTime;
-   writeToLog($logFile, $logVar, "Total createAlerts running time: $runningTime seconds\n\n");
+   $logger->info("Total createAlerts running time: $runningTime seconds\n\n");
 };
 print $@;
 
@@ -87,7 +92,7 @@ sub  truncateTables
    $statment->execute;
    $dbh->commit;
 
-   writeToLog($logFile, $logVar, "     truncate done\n");
+   $logger->info("     truncate done\n");
 }
 
 #-------------------------------------------------------------------------------
@@ -125,7 +130,7 @@ sub  createAlerts
    $dbh->commit;
 
    my $runningTime = time - $startTime;
-   writeToLog($logFile, $logVar, "     createAlerts running time: $runningTime\n");
+   $logger->info("     createAlerts running time: $runningTime\n");
 }
 
 #-------------------------------------------------------------------------------
@@ -158,7 +163,7 @@ sub  updateLavs
    $dbh->commit;
 
    my $runningTime = time - $startTime;
-   writeToLog($logFile, $logVar, "     updateLavs running time: $runningTime\n");
+   $logger->info("     updateLavs running time: $runningTime\n");
 
 }
 
@@ -192,7 +197,7 @@ sub  updateTolls
    $dbh->commit;
 
    my $runningTime = time - $startTime;
-   writeToLog($logFile, $logVar, "     updateTolls running time: $runningTime\n");
+   $logger->info("     updateTolls running time: $runningTime\n");
 }
 
 #-------------------------------------------------------------------------------
@@ -226,24 +231,5 @@ sub  updateAccidentSegments
    $dbh->commit;
 
    my $runningTime = time - $startTime;
-   writeToLog($logFile, $logVar, "     updateAccidentSegments running time: $runningTime\n");
-}
-
-
-#--------------------------------------------------------------------------------
-
-sub logTime {
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-	return ( ($mon+1)."-".$mday."-".($year+1900)." ".$hour.":".$min.":".$sec );
-}
-
-
-sub writeToLog {
-	my ( $logfile, $logvar, $logmessage ) = @_;
-	if ($logvar eq "yes") {
-		open( LOGFILE1, ">>$logfile")  || die("Could not open file: $!");
-		LOGFILE1->autoflush(1);
-		print LOGFILE1 ( logTime()."> $logmessage"."\n");
-		close (LOGFILE1);
-	}
+   $logger->info("     updateAccidentSegments running time: $runningTime\n");
 }
