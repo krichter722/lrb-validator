@@ -26,7 +26,7 @@ git submodule update --init
 cd template-helper && python setup.py build && sudo python setup.py install && cd ..
 sudo apt-get update
 # can't be installed via pip:
-sudo apt-get install python-augeas postgresql-common python-pip python-setuptools postgresql postgresql-client
+sudo apt-get install --assume-yes python-augeas postgresql-common python-pip python-setuptools postgresql postgresql-client
 # `import pexpect` fails on travis because `ptyprocess` can't be found; until it's clarified that this isn't a travis-only issue keep
 # statement for manual install here
 sudo pip install ptyprocess
