@@ -42,7 +42,7 @@ my $logger = Log::Log4perl->get_logger('lrb_validator.import');
 
 # Process arguments
 my @arguments = @ARGV;
-my $dbName = shift(@arguments);
+my $dbname = shift(@arguments);
 my $dbhost = shift(@arguments);
 my $dbuser = shift(@arguments);
 my $dbpassword = shift(@arguments);
