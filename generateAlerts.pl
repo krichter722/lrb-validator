@@ -54,13 +54,13 @@ my $startTime = time;
 
 writeToLog($logFile, $logVar, "generateAlerts in progess ...\n\n");
 
-system ("perl runDdl.pl $dbname $dbhost $dbuser $dbpassword $logFile $logVar");
-system ("perl extractAccidents.pl $dbname $dbhost $dbuser $dbpassword $logFile $logVar");
-system ("perl insertStatistics.pl  $dbname $dbhost $dbuser $dbpassword $logFile $logVar");
-system ("perl extractNumVehicles.pl $dbname $dbhost $dbuser $dbpassword $logFile $logVar");
-system ("perl extractLavs.pl  $dbname $dbhost $dbuser $dbpassword $logFile $logVar");
-system ("perl calculateTolls.pl  $dbname $dbhost $dbuser $dbpassword $logFile $logVar");
-system ("perl createAlerts.pl  $dbname $dbhost $dbuser $dbpassword $logFile $logVar");
+system ("perl runDdl.pl $dbname $dbhost $dbuser $dbpassword $logFile $logVar") == 0 or $logger->logdie("runDdl.pl failed (see preceeding output for details)");
+system ("perl extractAccidents.pl $dbname $dbhost $dbuser $dbpassword $logFile $logVar") == 0 or $logger->logdie("extractAccidents.pl failed (see preceeding output for details)");
+system ("perl insertStatistics.pl  $dbname $dbhost $dbuser $dbpassword $logFile $logVar") == 0 or $logger->logdie("insertStatistics.pl failed (see preceeding output for details)");
+system ("perl extractNumVehicles.pl $dbname $dbhost $dbuser $dbpassword $logFile $logVar") == 0 or $logger->logdie("extractNumVehicles.pl failed (see preceeding output for details)");
+system ("perl extractLavs.pl  $dbname $dbhost $dbuser $dbpassword $logFile $logVar") == 0 or $logger->logdie("extractLavs.pl failed (see preceeding output for details)");
+system ("perl calculateTolls.pl  $dbname $dbhost $dbuser $dbpassword $logFile $logVar") == 0 or $logger->logdie("calculateTolls.pl failed (see preceeding output for details)");
+system ("perl createAlerts.pl  $dbname $dbhost $dbuser $dbpassword $logFile $logVar") == 0 or $logger->logdie("createAlerts.pl failed (see preceeding output for details)");
 
 my $runningTime = time - $startTime;
 writeToLog($logFile, $logVar, "Total generateAlerts running time: $runningTime seconds\n\n");
