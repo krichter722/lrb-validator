@@ -31,10 +31,15 @@
 use DBI;
 use strict;
 use FileHandle;
+use Log::Log4perl qw(:easy);
+
+Log::Log4perl->easy_init($DEBUG);
+my $logger = Log::Log4perl->get_logger('lrb_validator.dropalltables');
 
 # Process arguments
 my @arguments = @ARGV;
 my $dbname = shift(@arguments);
+my $dbhost = shift(@arguments);
 my $dbuser = shift(@arguments);
 my $dbpassword = shift(@arguments);
 my $logfile = shift(@arguments);
@@ -42,8 +47,10 @@ my $logvar = shift(@arguments);
 
 my $dbquery;
 my $sth;
-my $dbh = DBI->connect("DBI:PgPP:$dbname", $dbuser, $dbpassword, {PrintError => 0})
-                or die "Couldn't connect to database: ". DBI->errstr;
+my $dbh  = DBI->connect(
+            "DBI:Pg:dbname=$dbname;host=$dbhost", "$dbuser", "$dbpassword",
+            {PrintError => 1}
+          ) || $logger->logdie("Could not connect to database:  $DBI::errstr");
 
 $dbquery="DROP TABLE completehistory;";
 $sth=$dbh->prepare("$dbquery") or die $DBI::errstr;

@@ -31,6 +31,10 @@
 use strict;
 use DBI qw(:sql_types);
 use FileHandle;
+use Log::Log4perl qw(:easy);
+
+Log::Log4perl->easy_init($DEBUG);
+my $logger = Log::Log4perl->get_logger('lrb_validator.xwayloop');
 
 #BEGIN {
 #    open (STDERR, ">>execution.log");
@@ -38,20 +42,21 @@ use FileHandle;
 
 # Process arguments
 my @arguments = @ARGV;
-my $dbName = shift(@arguments);
-my $userName = shift(@arguments);
-my $password = shift(@arguments);
+my $dbname = shift(@arguments);
+my $dbhost = shift(@arguments);
+my $dbuser = shift(@arguments);
+my $dbpassword = shift(@arguments);
 my $logFile =  shift(@arguments);
 my $logVar = shift(@arguments);
 
-writeToLog($logFile, $logVar, "xwayLoop.pl in progress ...\n");
+$logger->info("xwayLoop.pl in progress ...\n");
 
 
 # Connect to Postgres database
-my $dbh = DBI->connect(
-         "DBI:PgPP:$dbName", "$userName", "$password",
-         {PrintError => 1, AutoCommit => 0}
-       ) || die "Could not connect to database:  $DBI::errstr";
+my $dbh  = DBI->connect(
+            "DBI:Pg:dbname=$dbname;host=$dbhost", "$dbuser", "$dbpassword",
+            {PrintError => 1}
+          ) || $logger->logdie("Could not connect to database:  $DBI::errstr");
 
 eval {
 
@@ -69,7 +74,7 @@ eval {
        print "renameInputTable done\n";
 
        # Create temporary table for toll and accident alerts
-       system("perl createAlertTmpTables.pl $dbName $userName $password, $logFile $logVar");
+       system("perl createAlertTmpTables.pl $dbname $dbuser $dbpassword, $logFile $logVar");
        print " createAlertTmpTables.pl done\n";
    }
 
@@ -92,13 +97,13 @@ eval {
 
 
        # generate toll and accident alerts for xway $i
-       system("perl generateAlerts.pl $dbName $userName $password $logFile $logVar");
+       system("perl generateAlerts.pl $dbname $dbuser $dbpassword $logFile $logVar");
        print "generate Alerts done\n";
 
 
        if ($maxXway > 0 ){
           # more than 1 xways, insert the alerts into Tmp table
-          system ("perl addAlerts.pl $dbName $userName $password $logFile $logVar");
+          system ("perl addAlerts.pl $dbname $dbuser $dbpassword $logFile $logVar");
           print " addAlerts.pl done\n";
 
       }
@@ -112,12 +117,12 @@ eval {
        print "renameInputTmpTable done\n";
 
       # rename tollAccAlertsTmp to tollAccAlerts
-      system("perl renameAlertTmpTables.pl $dbName $userName $password $logFile $logVar");
+      system("perl renameAlertTmpTables.pl $dbname $dbuser $dbpassword $logFile $logVar");
        print "renameAlertTmpTables.pl done\n";
    }
 
    my $runningTime = time - $startTime;
-   writeToLog($logFile, $logVar, "Total xwayLoop running time: $runningTime seconds\n\n");
+   $logger->info("Total xwayLoop running time: $runningTime seconds\n\n");
 
 };
 print$@;
@@ -148,7 +153,7 @@ sub  getMaxXway
       }
 
       my $runningTime = time - $startTime;
-      writeToLog($logFile, $logVar, "     getNumXway running time: $runningTime\n");
+      $logger->info("     getNumXway running time: $runningTime\n");
 
      return $maxXway;
 }
@@ -168,7 +173,7 @@ sub  renameInputTable
       $dbh->commit;
 
       my $runningTime = time - $startTime;
-      writeToLog($logFile, $logVar, "     renameInputTable running time: $runningTime\n");
+      $logger->info("     renameInputTable running time: $runningTime\n");
 }
 
 #-------------------------------------------------------------------------------
@@ -186,7 +191,7 @@ sub  renameInputTmpTable
       $dbh->commit;
 
       my $runningTime = time - $startTime;
-      writeToLog($logFile, $logVar, "     renameInputTmpTable running time: $runningTime\n");
+      $logger->info("renameInputTmpTable running time: $runningTime");
 }
 
 #-------------------------------------------------------------------------------
@@ -203,7 +208,7 @@ sub  dropInput
     $dbh->commit;
 
   my $runningTime = time - $startTime;
-  writeToLog($logFile, $logVar, "     dropInput running time: $runningTime\n");
+  $logger->info("dropInput running time: $runningTime");
 
 }
 
@@ -236,7 +241,7 @@ sub  createInput
     $dbh->commit;
 
   my $runningTime = time - $startTime;
-  writeToLog($logFile, $logVar, "     recreateInput running time: $runningTime\n");
+  logger->info("recreateInput running time: $runningTime");
 }
 
 #-------------------------------------------------------------------------------
@@ -258,7 +263,7 @@ sub  extractInput
       $dbh->commit;
 
       my $runningTime = time - $startTime;
-      writeToLog($logFile, $logVar, "     extractInput running time: $runningTime\n");
+      $logger->info("extractInput running time: $runningTime");
 }
 #-------------------------------------------------------------------------------
 # Create Indexes
@@ -310,22 +315,5 @@ sub  createInputIndexes
     $dbh->commit;
 
     my $runningTime = time - $startTime;
-    writeToLog($logFile, $logVar, "     createInputIndexes running time: $runningTime\n");
-}
-#--------------------------------------------------------------------------------
-
-sub logTime {
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-	return ( ($mon+1)."-".$mday."-".($year+1900)." ".$hour.":".$min.":".$sec );
-}
-
-
-sub writeToLog {
-	my ( $logfile, $logvar, $logmessage ) = @_;
-	if ($logvar eq "yes") {
-		open( LOGFILE1, ">>$logfile")  || die("Could not open file: $!");
-		LOGFILE1->autoflush(1);
-		print LOGFILE1 ( logTime()."> $logmessage"."\n");
-		close (LOGFILE1);
-	}
+    $logger->info("createInputIndexes running time: $runningTime");
 }

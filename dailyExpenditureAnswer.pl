@@ -30,10 +30,15 @@
 use DBI;
 use strict;
 use FileHandle;
+use Log::Log4perl qw(:easy);
+
+Log::Log4perl->easy_init($DEBUG);
+my $logger = Log::Log4perl->get_logger('lrb_validator.import');
 
 # Process arguments
 my @arguments = @ARGV;
 my $dbname = shift(@arguments);
+my $dbhost = shift(@arguments);
 my $dbuser = shift(@arguments);
 my $dbpassword = shift(@arguments);
 my $logfile = shift(@arguments);
@@ -41,29 +46,14 @@ my $logvar = shift(@arguments);
 
 my $dbquery;
 my $sth;
-my $dbh = DBI->connect("DBI:PgPP:$dbname", $dbuser, $dbpassword)
-                or die "Couldn't connect to database: ". DBI->errstr;
+my $dbh  = DBI->connect(
+            "DBI:Pg:dbname=$dbname;host=$dbhost", "$dbuser", "$dbpassword",
+            {PrintError => 1}
+          ) || $logger->logdie("Could not connect to database:  $DBI::errstr");
 
-writeToLog ( $logfile, $logvar, "Calculating dailyExpenditureanswer.");
+$logger->info( "Calculating dailyExpenditureanswer.");
 #Summing query on relevant account balances.
 	$dbquery="SELECT completehistory.carid AS carid, completehistory.day AS day, completehistory.toll AS bal, dailyExpenditurerequests.qid INTO dailyExpenditureanswer FROM dailyExpenditurerequests INNER JOIN completehistory ON (dailyExpenditurerequests.day = completehistory.day) AND (dailyExpenditurerequests.carid = completehistory.carid) AND (dailyExpenditurerequests.xway = completehistory.xway);";
-	$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+	$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 	$sth->execute;
-writeToLog ( $logfile, $logvar, "Answer stored in dailyExpenditureanswer table. ");
-
-
-#### SUBS
-sub logTime {
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-	return ( ($mon+1)."-".$mday."-".($year+1900)." ".$hour.":".$min.":".$sec );
-}
-
-sub writeToLog {
-	my ( $logfile, $logvar, $logmessage ) = @_;
-	if ($logvar eq "yes") {
-		open( LOGFILE1, ">>$logfile")  || die("Could not open file: $!");
-		LOGFILE1->autoflush(1);
-		print LOGFILE1 ( logTime()."> $logmessage"."\n");
-		close (LOGFILE1);
-	}
-}
+$logger->info("Answer stored in dailyExpenditureanswer table. ");

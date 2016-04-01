@@ -30,10 +30,15 @@
 use DBI;
 use strict;
 use FileHandle;
+use Log::Log4perl qw(:easy);
+
+Log::Log4perl->easy_init($DEBUG);
+my $logger = Log::Log4perl->get_logger('lrb_validator.accountbalancevalidation');
 
 # Process arguments
 my @arguments = @ARGV;
 my $dbname = shift(@arguments);
+my $dbhost = shift(@arguments);
 my $dbuser = shift(@arguments);
 my $dbpassword = shift(@arguments);
 my $logfile = shift(@arguments);
@@ -41,8 +46,10 @@ my $logvar = shift(@arguments);
 
 my $dbquery;
 my $sth;
-my $dbh = DBI->connect("DBI:PgPP:$dbname", "$dbuser", "$dbpassword")
-                or die "Couldn't connect to database: ". DBI->errstr;
+my $dbh  = DBI->connect(
+            "DBI:Pg:dbname=$dbname;host=$dbhost", "$dbuser", "$dbpassword",
+            {PrintError => 1}
+          ) || $logger->logdie("Could not connect to database:  $DBI::errstr");
 
 #Creating wrong answers table, just a copy of all output at the moment
 $dbquery="SELECT * into accountBalancewronganswers FROM outputaccountBalance;";
@@ -87,13 +94,11 @@ $sth->execute;
 # If wrong answer table isn't empty, it'll print to log
 if ( !@accountBalancecomparison){
 
-        print "   *** Account Balance Validation failed All incorrect results are stored in accountBalancewronganswers table.\n";
-
-	writeToLog ( $logfile, $logvar, "Account Balance Validation failed All incorrect results are stored in accountBalancewronganswers table.");
-	writeToLog ( $logfile, $logvar, "Following are some incorrect Account Balanc results. Fields listed are: qid, resulttime, balance.");
-	writeToLog ( $logfile, $logvar, join( ',', @accountBalancecomparison));
+	$logger->info("Account Balance Validation failed All incorrect results are stored in accountBalancewronganswers table.");
+	$logger->info("Following are some incorrect Account Balanc results. Fields listed are: qid, resulttime, balance.");
+	$logger->info(join( ',', @accountBalancecomparison));
 	while (@accountBalancecomparison = $sth->fetchrow_array)  {
-		writeToLog ( $logfile, $logvar, join( ',', @accountBalancecomparison));
+		$logger->info(join( ',', @accountBalancecomparison));
 	}
 	exit (0);
 }else {
@@ -121,23 +126,6 @@ if ( !@accountBalancecomparison){
        $dbh->do("DROP TABLE accountBalancetimeeq;");
 
 
-	writeToLog ( $logfile, $logvar, "Account Balance Validition Completed Successfully!");
-        print  "   *** Account Balance Validition Completed Successfully!\n";
+	$logger->info("Account Balance Validition Completed Successfully!");
 
 $dbh->disconnect;
-
-#### SUBS
-sub logTime {
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-	return ( ($mon+1)."-".$mday."-".($year+1900)." ".$hour.":".$min.":".$sec );
-}
-
-sub writeToLog {
-	my ( $logfile, $logvar, $logmessage ) = @_;
-	if ($logvar eq "yes") {
-		open( LOGFILE1, ">>$logfile")  || die("Could not open file: $!");
-		LOGFILE1->autoflush(1);
-		print LOGFILE1 ( logTime()."> $logmessage"."\n");
-		close (LOGFILE1);
-	}
-}

@@ -42,6 +42,10 @@
 use strict;
 use DBI qw(:sql_types);
 use FileHandle;
+use Log::Log4perl qw(:easy);
+
+Log::Log4perl->easy_init($DEBUG);
+my $logger = Log::Log4perl->get_logger('lrb_validator.comparealters');
 
 #BEGIN {
 #    open (STDERR, ">>execution.log");
@@ -49,19 +53,20 @@ use FileHandle;
 
 # Process arguments
 my @arguments = @ARGV;
-my $dbName = shift(@arguments);
-my $userName = shift(@arguments);
-my $password = shift(@arguments);
+my $dbname = shift(@arguments);
+my $dbhost = shift(@arguments);
+my $dbuser = shift(@arguments);
+my $dbpassword = shift(@arguments);
 my $logFile = shift(@arguments);
 my $logVar = shift(@arguments);
 
-writeToLog($logFile, $logVar,  "compareALerts in progress ...\n");
+$logger->info( "compareALerts in progress ...");
 
 # Connect to test Postgres database
-my $dbh = DBI->connect(
-            "DBI:PgPP:$dbName", "$userName", "$password",
-            {PrintError => 0, AutoCommit => 1}
-          ) || die "Could not connect to database:  $DBI::errstr";
+my $dbh  = DBI->connect(
+            "DBI:Pg:dbname=$dbname;host=$dbhost", "$dbuser", "$dbpassword",
+            {PrintError => 1}
+          ) || $logger->logdie("Could not connect to database:  $DBI::errstr");
 
 eval
 {
@@ -75,7 +80,7 @@ eval
    results($dbh);
 
    my $runningTime = time - $startTime;
-   writeToLog($logFile, $logVar,  "Total alertComparing running time: $runningTime seconds\n\n");
+   $logger->info( "Total alertComparing running time: $runningTime seconds");
 };
 print $@;
 
@@ -96,7 +101,7 @@ sub createIndex
    $dbh->do("CREATE INDEX tollAccIdx2 ON tollAccAlerts(time, carid);");
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar,  "     createIndex running time:  $runningTime\n");
+   $logger->info( "     createIndex running time:  $runningTime");
 }
 
 
@@ -128,7 +133,7 @@ sub accAlertNotInValidator
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     accAlertNotInValidator running time:  $runningTime\n");
+   $logger->info("     accAlertNotInValidator running time:  $runningTime");
 }
 
 
@@ -161,7 +166,7 @@ sub accAlertNotInOriginal
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar,  "     accAlertNotInOriginal running time:  $runningTime\n");
+   $logger->info( "     accAlertNotInOriginal running time:  $runningTime");
 }
 
 
@@ -189,7 +194,7 @@ sub accAlertDifferentSegment
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar,  "     accAlertDifferentSegment running time:  $runningTime\n");
+   $logger->info( "     accAlertDifferentSegment running time:  $runningTime");
 }
 
 #------------------------------------------------------------------------
@@ -219,7 +224,7 @@ sub tollAlertDifferentLav
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     tollAlertDifferentLav running time:  $runningTime\n");
+   $logger->info("     tollAlertDifferentLav running time:  $runningTime");
 }
 
 
@@ -250,7 +255,7 @@ sub tollAlertDifferentToll
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar,  "     tollAlertDifferentToll running time:  $runningTime\n");
+   $logger->info( "     tollAlertDifferentToll running time:  $runningTime");
 }
 
 #------------------------------------------------------------------------
@@ -281,7 +286,7 @@ sub tollAlertNotInValidator
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar,  "     tollAlertNotInValidator running time:  $runningTime\n");
+   $logger->info( "     tollAlertNotInValidator running time:  $runningTime");
 }
 
 
@@ -314,7 +319,7 @@ sub tollAlertNotInOriginal
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     tollAlertNotInOriginal running time:  $runningTime\n");
+   $logger->info("     tollAlertNotInOriginal running time:  $runningTime");
 }
 #------------------------------------------------------------------------
 # Check the compared results
@@ -333,8 +338,7 @@ sub results
    $statement->finish;
    if ($row[0] > 0) {
       $isDifferent = 1;
-      print "     * There are more accident alerts in the original\n";
-      writeToLog($logFile, $logVar, "     *** There are more accident alerts in the original. Wrong answers stored in accAlertsNotInOriginal table\n");
+      $logger->info("     *** There are more accident alerts in the original. Wrong answers stored in accAlertsNotInOriginal table");
    }
 
    $sql =  "SELECT count (*) from accAlertNotInOriginal;";
@@ -344,16 +348,13 @@ sub results
    $statement->finish;
    if ($row[0] > 0) {
       $isDifferent = 1;
-      print "     * There are more accident alerts in the validator\n";
-      writeToLog($logFile, $logVar,  "     * There are more accident alerts in the validator. Wrong answers stored in accAlertsNotInValidator table\n");
+      $logger->info( "     * There are more accident alerts in the validator. Wrong answers stored in accAlertsNotInValidator table");
    }
 
    if ( $isDifferent) {
-       print "   *** Accident alerts validation failed\n";
-       writeToLog($logFile, $logVar, "     *** Accident alerts validation failed\n");
+       $logger->info("     *** Accident alerts validation failed");
    } else {
-       print "   *** Accident alerts validation completed sucessfully\n";
-       writeToLog($logFile, $logVar, "    *** Accident alerts validation completed sucessfully\n");
+       $logger->info("    *** Accident alerts validation completed sucessfully");
    }
 
    $isDifferent = 0;
@@ -398,8 +399,7 @@ sub results
    $statement->finish;
    if ($row[0] > 0) {
       $isDifferent = 1;
-      print "     * There are more toll alerts in the original\n";
-      writeToLog($logFile, $logVar,"     * There are more toll alerts in the original. Wrong answers stored in tollAlertsNotInValidator table\n");
+      $logger->info("     * There are more toll alerts in the original. Wrong answers stored in tollAlertsNotInValidator table");
 
    }
 
@@ -410,37 +410,16 @@ sub results
    $statement->finish;
    if ($row[0] > 0) {
       $isDifferent = 1;
-      print "     * There are more toll alerts in the validator\n";
-      writeToLog($logFile, $logVar, "     * There are more toll alerts in the validator. . Wrong answers stored in accAlertsNotInOriginal table\n");
+      $logger->info("     * There are more toll alerts in the validator. . Wrong answers stored in accAlertsNotInOriginal table");
    }
 
    if ( $isDifferent) {
-       print "   *** Toll alerts validation failed\n";
-       writeToLog($logFile, $logVar, "   *** Toll alerts validation failed\n");
+       $logger->info("   *** Toll alerts validation failed");
    } else {
-       print "   *** Toll alerts validation completed sucessfully\n";
-       writeToLog($logFile, $logVar, "   *** Toll alerts validation completed sucessfully\n");
+       $logger->info("   *** Toll alerts validation completed sucessfully");
    }
 
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     checking running time:  $runningTime\n");
-}
-
-#--------------------------------------------------------------------------------
-
-sub logTime {
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-	return ( ($mon+1)."-".$mday."-".($year+1900)." ".$hour.":".$min.":".$sec );
-}
-
-
-sub writeToLog {
-	my ( $logfile, $logvar, $logmessage ) = @_;
-	if ($logvar eq "yes") {
-		open( LOGFILE1, ">>$logfile")  || die("Could not open file: $!");
-		LOGFILE1->autoflush(1);
-		print LOGFILE1 ( logTime()."> $logmessage"."\n");
-		close (LOGFILE1);
-	}
+   $logger->info("     checking running time:  $runningTime");
 }

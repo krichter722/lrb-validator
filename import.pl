@@ -254,5 +254,4 @@ $sth->execute or $logger->logdie("statement '$dbquery' failed");
 $logger->info ("Importing output for accident alerts from '$accidentalerts'.");
 copy_file($dbh, $accident_alters_table_name, $accidentalerts);
 
-
 $logger->info ("Import complete.");

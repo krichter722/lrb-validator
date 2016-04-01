@@ -54,7 +54,7 @@ def bootstrap(cpan=cpan_default):
     if not os_utils.which(cpan):
         raise ValueError("cpan binary '%s' doesn't exist or isn't executable" % (cpan,))
     # there's seriously no smart way to avoid cpan questions without manipulating the local configurtion (which conflicts with the idea of making it possible to run the script locally and not only on CI services)
-    cpan_packages = ["DBD::PgPP", "Log::Log4perl"]
+    cpan_packages = ["DBD::PgPP", "Log::Log4perl", "DBD::Pg"]
     logger.info("installing %s with cpan '%s'" % (str(cpan_packages), cpan))
     cpan_proc = pexpect.spawn(str.join(" ", [cpan]+cpan_packages))
     cpan_proc.logfile = sys.stdout
