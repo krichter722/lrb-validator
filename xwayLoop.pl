@@ -74,7 +74,7 @@ eval {
        print "renameInputTable done\n";
 
        # Create temporary table for toll and accident alerts
-       system("perl createAlertTmpTables.pl $dbname $dbuser $dbpassword, $logFile $logVar");
+       system("perl createAlertTmpTables.pl $dbname $dbhost $dbuser $dbpassword, $logFile $logVar") == 0 or $logger->logdie("createAlertTmpTables.pl failed (see preceeding output for details)");
        print " createAlertTmpTables.pl done\n";
    }
 
@@ -97,13 +97,13 @@ eval {
 
 
        # generate toll and accident alerts for xway $i
-       system("perl generateAlerts.pl $dbname $dbuser $dbpassword $logFile $logVar");
+       system("perl generateAlerts.pl $dbname $dbhost $dbuser $dbpassword $logFile $logVar") == 0 or $logger->logdie("generateAlerts.pl failed (see preceeding output for details)");;
        print "generate Alerts done\n";
 
 
        if ($maxXway > 0 ){
           # more than 1 xways, insert the alerts into Tmp table
-          system ("perl addAlerts.pl $dbname $dbuser $dbpassword $logFile $logVar");
+          system ("perl addAlerts.pl $dbname $dbhost $dbuser $dbpassword $logFile $logVar") == 0 or $logger->logdie("addAlerts.pl failed (see preceeding output for details)");;
           print " addAlerts.pl done\n";
 
       }
@@ -117,7 +117,7 @@ eval {
        print "renameInputTmpTable done\n";
 
       # rename tollAccAlertsTmp to tollAccAlerts
-      system("perl renameAlertTmpTables.pl $dbname $dbuser $dbpassword $logFile $logVar");
+      system("perl renameAlertTmpTables.pl $dbname $dbhost $dbuser $dbpassword $logFile $logVar") == 0 or $logger->logdie("renameAlertTmpTables.pl failed (see preceeding output for details)");;
        print "renameAlertTmpTables.pl done\n";
    }
 

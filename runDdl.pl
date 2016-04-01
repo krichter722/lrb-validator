@@ -32,6 +32,10 @@
 use strict;
 use DBI qw(:sql_types);
 use FileHandle;
+use Log::Log4perl qw(:easy);
+
+Log::Log4perl->easy_init($DEBUG);
+my $logger = Log::Log4perl->get_logger('lrb_validator.import');
 
 #BEGIN {
 #    open (STDERR, ">>execution.log");
@@ -39,19 +43,20 @@ use FileHandle;
 
 # Process arguments
 my @arguments = @ARGV;
-my $dbName = shift(@arguments);
-my $userName = shift(@arguments);
-my $password = shift(@arguments);
+my $dbname = shift(@arguments);
+my $dbhost = shift(@arguments);
+my $dbuser = shift(@arguments);
+my $dbpassword = shift(@arguments);
 my $logFile = shift(@arguments);
 my $logVar = shift(@arguments);
 
 writeToLog($logFile, $logVar, "runDdl in progress ...\n");
 
 # Connect to test Postgres database
-my $dbh = DBI->connect(
-            "DBI:PgPP:$dbName", "$userName", "$password",
-            {PrintError => 0, AutoCommit => 1}
-          ) || die "Could not connect to database:  $DBI::errstr";
+my $dbh  = DBI->connect(
+            "DBI:Pg:dbname=$dbname;host=$dbhost", "$dbuser", "$dbpassword",
+            {PrintError => 1}
+          ) || $logger->logdie("Could not connect to database:  $DBI::errstr");
 
 eval
 {

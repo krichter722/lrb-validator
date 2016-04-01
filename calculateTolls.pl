@@ -32,6 +32,10 @@
 use strict;
 use DBI qw(:sql_types);
 use FileHandle;
+use Log::Log4perl qw(:easy);
+
+Log::Log4perl->easy_init($DEBUG);
+my $logger = Log::Log4perl->get_logger('lrb_validator.import');
 
 #BEGIN {
 #    open (STDERR, ">>execution.log");
@@ -39,13 +43,14 @@ use FileHandle;
 
 # Process arguments
 my @arguments = @ARGV;
-my $dbName = shift(@arguments);
-my $userName = shift(@arguments);
-my $password = shift(@arguments);
+my $dbname = shift(@arguments);
+my $dbhost = shift(@arguments);
+my $dbuser = shift(@arguments);
+my $dbpassword = shift(@arguments);
 my $logFile = shift(@arguments);
 my $logVar = shift(@arguments);
 
-writeToLog($logFile, $logVar, "calculateTolls IN PROGRESS\n");
+$logger->info("calculateTolls IN PROGRESS\n");
 
 # Constants
 my $MAX_DOWNSTREAM_SEGMENT = 4;
@@ -53,10 +58,10 @@ my $MAX_NUM_VEHICLE = 50; # 50 vehicles/segment
 my $MAX_LAV = 40; # 40mph
 
 # Connect to Postgres database
-my $dbh = DBI->connect(
-            "DBI:PgPP:$dbName", "$userName", "$password",
-            {PrintError => 1, AutoCommit => 0}
-          ) || die "Could not connect to database:  $DBI::errstr";
+my $dbh  = DBI->connect(
+            "DBI:Pg:dbname=$dbname;host=$dbhost", "$dbuser", "$dbpassword",
+            {PrintError => 1}
+          ) || $logger->logdie("Could not connect to database:  $DBI::errstr");
 
 eval {
    my $startTime = time;
@@ -68,7 +73,7 @@ eval {
    notAccidents($dbh);
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "Total calculateTolls running time:  $runningTime\n\n");
+   $logger->info("Total calculateTolls running time:  $runningTime\n\n");
 };
 print $@;   # Print out errors
 
@@ -97,7 +102,7 @@ sub highLavsLowVehicles
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     highLavsLowVehicles running time:  $runningTime\n");
+   $logger->info("     highLavsLowVehicles running time:  $runningTime\n");
 }
 
 
@@ -157,7 +162,7 @@ sub accidents
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     accidents running time:  $runningTime\n");
+   $logger->info("     accidents running time:  $runningTime\n");
 }
 
 #------------------------------------------------------------------------
@@ -179,7 +184,7 @@ sub highToll
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     highToll running time: $runningTime\n");
+   $logger->info("     highToll running time: $runningTime\n");
 }
 
 #------------------------------------------------------------------------
@@ -238,7 +243,7 @@ sub accidentSegments
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     accidentSegments running time:  $runningTime\n");
+   $logger->info("     accidentSegments running time:  $runningTime\n");
 }
 
 
@@ -262,23 +267,5 @@ sub notAccidents
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     notAccidents running time:  $runningTime\n");
-}
-
-#--------------------------------------------------------------------------------
-
-sub logTime {
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-	return ( ($mon+1)."-".$mday."-".($year+1900)." ".$hour.":".$min.":".$sec );
-}
-
-
-sub writeToLog {
-	my ( $logfile, $logvar, $logmessage ) = @_;
-	if ($logvar eq "yes") {
-		open( LOGFILE1, ">>$logfile")  || die("Could not open file: $!");
-		LOGFILE1->autoflush(1);
-		print LOGFILE1 ( logTime()."> $logmessage"."\n");
-		close (LOGFILE1);
-	}
+   $logger->info("     notAccidents running time:  $runningTime\n");
 }

@@ -31,6 +31,10 @@
 use strict;
 use DBI qw(:sql_types);
 use FileHandle;
+use Log::Log4perl qw(:easy);
+
+Log::Log4perl->easy_init($DEBUG);
+my $logger = Log::Log4perl->get_logger('lrb_validator.import');
 
 #BEGIN {
 #    open (STDERR, ">>execution.log");
@@ -38,22 +42,23 @@ use FileHandle;
 
 # Process arguments
 my @arguments = @ARGV;
-my $dbName = shift(@arguments);
-my $userName = shift(@arguments);
-my $password = shift(@arguments);
+my $dbname = shift(@arguments);
+my $dbhost = shift(@arguments);
+my $dbuser = shift(@arguments);
+my $dbpassword = shift(@arguments);
 my $logFile = shift(@arguments);
 my $logVar = shift(@arguments);
 
-writeToLog($logFile, $logVar, "addAlerts in progress ...\n");
+$logger->info("addAlerts in progress ...\n");
 
 # Constants
 my $EXIT_LANE = 4;
 
 # Connect to Postgres database
-my $dbh = DBI->connect(
-            "DBI:PgPP:$dbName", "$userName", "$password",
-            {PrintError => 1, AutoCommit => 0}
-          ) || die "Could not connect to database:  $DBI::errstr";
+my $dbh  = DBI->connect(
+            "DBI:Pg:dbname=$dbname;host=$dbhost", "$dbuser", "$dbpassword",
+            {PrintError => 1}
+          ) || $logger->logdie("Could not connect to database:  $DBI::errstr");
 
 eval
 {
@@ -63,7 +68,7 @@ eval
    insertAlerts($dbh);
 
    my $runningTime = time - $startTime;
-   writeToLog($logFile, $logVar, "Total addAlerts running time: $runningTime seconds\n\n");
+   $logger->info("Total addAlerts running time: $runningTime seconds\n\n");
 };
 print $@;
 
@@ -87,24 +92,5 @@ sub  insertAlerts
    $dbh->commit;
 
    my $runningTime = time - $startTime;
-   writeToLog($logFile, $logVar, "     insertAlerts running time: $runningTime\n");
-}
-
-
-#--------------------------------------------------------------------------------
-
-sub logTime {
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-	return ( ($mon+1)."-".$mday."-".($year+1900)." ".$hour.":".$min.":".$sec );
-}
-
-
-sub writeToLog {
-	my ( $logfile, $logvar, $logmessage ) = @_;
-	if ($logvar eq "yes") {
-		open( LOGFILE1, ">>$logfile")  || die("Could not open file: $!");
-		LOGFILE1->autoflush(1);
-		print LOGFILE1 ( logTime()."> $logmessage"."\n");
-		close (LOGFILE1);
-	}
+   $logger->info("     insertAlerts running time: $runningTime\n");
 }

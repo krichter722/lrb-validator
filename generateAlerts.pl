@@ -32,12 +32,17 @@
 use strict;
 use DBI qw(:sql_types);
 use FileHandle;
+use Log::Log4perl qw(:easy);
+
+Log::Log4perl->easy_init($DEBUG);
+my $logger = Log::Log4perl->get_logger('lrb_validator.import');
 
 # Arguments
 my @arguments = @ARGV;
-my $dbName = shift(@arguments);
-my $userName = shift(@arguments);
-my $password = shift(@arguments);
+my $dbname = shift(@arguments);
+my $dbhost = shift(@arguments);
+my $dbuser = shift(@arguments);
+my $dbpassword = shift(@arguments);
 my $logFile =  shift(@arguments);
 my $logVar =  shift(@arguments);
 
@@ -49,13 +54,13 @@ my $startTime = time;
 
 writeToLog($logFile, $logVar, "generateAlerts in progess ...\n\n");
 
-system ("perl runDdl.pl $dbName $userName $password $logFile $logVar");
-system ("perl extractAccidents.pl $dbName $userName $password $logFile $logVar");
-system ("perl insertStatistics.pl  $dbName $userName $password $logFile $logVar");
-system ("perl extractNumVehicles.pl $dbName $userName $password $logFile $logVar");
-system ("perl extractLavs.pl  $dbName $userName $password $logFile $logVar");
-system ("perl calculateTolls.pl  $dbName $userName $password $logFile $logVar");
-system ("perl createAlerts.pl  $dbName $userName $password $logFile $logVar");
+system ("perl runDdl.pl $dbname $dbhost $dbuser $dbpassword $logFile $logVar");
+system ("perl extractAccidents.pl $dbname $dbhost $dbuser $dbpassword $logFile $logVar");
+system ("perl insertStatistics.pl  $dbname $dbhost $dbuser $dbpassword $logFile $logVar");
+system ("perl extractNumVehicles.pl $dbname $dbhost $dbuser $dbpassword $logFile $logVar");
+system ("perl extractLavs.pl  $dbname $dbhost $dbuser $dbpassword $logFile $logVar");
+system ("perl calculateTolls.pl  $dbname $dbhost $dbuser $dbpassword $logFile $logVar");
+system ("perl createAlerts.pl  $dbname $dbhost $dbuser $dbpassword $logFile $logVar");
 
 my $runningTime = time - $startTime;
 writeToLog($logFile, $logVar, "Total generateAlerts running time: $runningTime seconds\n\n");
