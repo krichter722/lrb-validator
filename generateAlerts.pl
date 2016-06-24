@@ -52,7 +52,7 @@ my $startTime = time;
 #    open (STDERR, ">>execution.log");
 #}
 
-writeToLog($logFile, $logVar, "generateAlerts in progess ...\n\n");
+$logger->info("generateAlerts in progess ...");
 
 system ("perl runDdl.pl $dbname $dbhost $dbuser $dbpassword $logFile $logVar") == 0 or $logger->logdie("runDdl.pl failed (see preceeding output for details)");
 system ("perl extractAccidents.pl $dbname $dbhost $dbuser $dbpassword $logFile $logVar") == 0 or $logger->logdie("extractAccidents.pl failed (see preceeding output for details)");
@@ -63,24 +63,6 @@ system ("perl calculateTolls.pl  $dbname $dbhost $dbuser $dbpassword $logFile $l
 system ("perl createAlerts.pl  $dbname $dbhost $dbuser $dbpassword $logFile $logVar") == 0 or $logger->logdie("createAlerts.pl failed (see preceeding output for details)");
 
 my $runningTime = time - $startTime;
-writeToLog($logFile, $logVar, "Total generateAlerts running time: $runningTime seconds\n\n");
+$logger->info("Total generateAlerts running time: $runningTime seconds");
 
 exit(0);
-
-#--------------------------------------------------------------------------------
-
-sub logTime {
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-	return ( ($mon+1)."-".$mday."-".($year+1900)." ".$hour.":".$min.":".$sec );
-}
-
-
-sub writeToLog {
-	my ( $logfile, $logvar, $logmessage ) = @_;
-	if ($logvar eq "yes") {
-		open( LOGFILE1, ">>$logfile")  || die("Could not open file: $!");
-		LOGFILE1->autoflush(1);
-		print LOGFILE1 ( logTime()."> $logmessage"."\n");
-		close (LOGFILE1);
-	}
-}

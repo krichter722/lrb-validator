@@ -42,11 +42,21 @@ logger_formatter = logging.Formatter('%(asctime)s:%(message)s')
 logger_stdout_handler.setFormatter(logger_formatter)
 logger.addHandler(logger_stdout_handler)
 
-postgres_version = (9,4)
-initdb_default = "/usr/lib/postgresql/9.4/bin/initdb"
-postgres_default = "/usr/lib/postgresql/9.4/bin/postgres"
-psql_default = "/usr/lib/postgresql/9.4/bin/psql"
-createdb_default = "/usr/lib/postgresql/9.4/bin/createdb"
+lsb_release = "lsb_release"
+
+def __lsb_release__():
+    return sp.check_output([lsb_release, "-c", "-s"]).strip()
+
+if __lsb_release__() == "xenial":
+    postgres_version = (9,5) # postgresql-9.4 isn't available in Ubuntu 16.04
+else:
+    postgres_version = (9,4)
+initdb_default = "/usr/lib/postgresql/%s/bin/initdb" % (str.join(".", [str(i) for i in postgres_version]))
+postgres_default = "/usr/lib/postgresql/%s/bin/postgres" % (str.join(".", [str(i) for i in postgres_version]))
+psql_default = "/usr/lib/postgresql/%s/bin/psql" % (str.join(".", [str(i) for i in postgres_version]))
+createdb_default = "/usr/lib/postgresql/%s/bin/createdb" % (str.join(".", [str(i) for i in postgres_version]))
+
+bug_reporting_url="https://github.com/krichter722/lrb-validator/issues/new"
 
 class Bootstrapper():
     """Allows monitoring of the bootstrap progress and control over the database
@@ -65,6 +75,8 @@ class Bootstrapper():
         shutdown_server=False
     ):
         self.initdb=initdb
+        if not os.path.exists(postgres):
+            raise ValueError("postgres binary '%s' doesn't exist. It should have been installed in the `run_once.sh` setup script. If you ran it, please consider filing a bug at %s" % (postgres, bug_reporting_url))
         self.postgres=postgres
         self.createdb=createdb
         self.base_dir_path=base_dir_path
@@ -115,12 +127,14 @@ class Bootstrapper():
                         os.makedirs(self.db_host)
                     elif not os.path.isdir(self.db_host):
                         raise ValueError("path for database host (socket directory) '%s' points to an existing file or link" % (self.db_host,))
-                db_server_proc = sp.Popen([self.postgres, "-D", db_dir_path, "-k", self.db_host,
-                    "--checkpoint_segments=48", # avoiding `LOG:  checkpoints are occurring too frequently ([n] seconds apart)` (occured with 24)
-                ])
+                db_server_proc_cmds = [self.postgres, "-D", db_dir_path, "-k", self.db_host]
+                if postgres_version <= (9,4):
+                    db_server_proc_cmds += ["--checkpoint_segments=48", # avoiding `LOG:  checkpoints are occurring too frequently ([n] seconds apart)` (occured with 24) (seems to be handled by `max_wal_size` in 9.5 @TODO: figure out good value and if it can be used exactly as `checkpoint_segments`)
+                    ]
+                db_server_proc = sp.Popen(db_server_proc_cmds)
                 while not self.shutdown_event.is_set() and db_server_proc.poll() == None:
                     time.sleep(1) # in python 3.x it might be better to use subprocess.Popen.wait with timeout because it used short sleeps of the asyncio module<ref>https://docs.python.org/3.4/library/subprocess.html#subprocess.Popen.wait</ref>
-                if not not self.shutdown_event.is_set():
+                if self.shutdown_event.is_set():
                     logger.debug("server shutdown requested")
                 if db_server_proc.poll() == None:
                     db_server_proc.send_signal(signal.SIGINT)

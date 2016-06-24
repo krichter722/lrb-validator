@@ -26,7 +26,13 @@ git submodule update --init
 cd template-helper && python setup.py build && sudo python setup.py install && cd ..
 sudo apt-get update
 # can't be installed via pip:
-sudo apt-get install --assume-yes python-augeas postgresql-common python-pip python-setuptools postgresql postgresql-client
+if [ "$(lsb_release -c -s)" = "xenial" ]; then
+    sudo apt-get install --assume-yes postgresql-9.5 postgresql-client-9.5
+else
+    sudo apt-get install --assume-yes postgresql-9.4 postgresql-client-9.4
+fi
+sudo apt-get install --assume-yes python-augeas postgresql-common python-pip python-setuptools
+    # there's no postgresql-common package with version number in Ubuntu 16.04 @TODO: check others
 # `import pexpect` fails on travis because `ptyprocess` can't be found; until it's clarified that this isn't a travis-only issue keep
 # statement for manual install here
 sudo pip install ptyprocess

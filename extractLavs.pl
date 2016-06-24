@@ -50,7 +50,7 @@ my $dbpassword = shift(@arguments);
 my $logFile = shift(@arguments);
 my $logVar = shift(@arguments);
 
-writeToLog($logFile, $logVar, "extractLavs in progess ...\n");
+$logger->info("extractLavs in progess ...");
 
 # Constants
 my $SIMULATOR_DURATION = 180; # 180 minutes, 3 hours
@@ -70,10 +70,13 @@ eval {
    indexPreLav($dbh);
    lav($dbh);
    noLav($dbh);
+
+   intermediate($dbh);
+
    dropTmpTables($dbh);
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "Total lavExtract running time:  $runningTime seconds\n\n");
+   $logger->info("Total lavExtract running time:  $runningTime seconds");
 };
 print $@;   # Print out errors
 
@@ -160,7 +163,7 @@ sub preLav
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     preLav running time:  $runningTime\n");
+   $logger->info("     preLav running time:  $runningTime");
 }
 
 
@@ -182,7 +185,7 @@ sub indexPreLav
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     indexPreLav running time:  $runningTime\n");
+   $logger->info("     indexPreLav running time:  $runningTime");
 }
 
 #------------------------------------------------------------------------
@@ -218,7 +221,7 @@ sub lav
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     lav running time:  $runningTime\n");
+   $logger->info("     lav running time:  $runningTime");
 }
 
 #------------------------------------------------------------------------
@@ -240,23 +243,188 @@ sub noLav
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     noLav running time: $runningTime\n");
-}
-
-#--------------------------------------------------------------------------------
-
-sub logTime {
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-	return ( ($mon+1)."-".$mday."-".($year+1900)." ".$hour.":".$min.":".$sec );
+   $logger->info("     noLav running time: $runningTime");
 }
 
 
-sub writeToLog {
-	my ( $logfile, $logvar, $logmessage ) = @_;
-	if ($logvar eq "yes") {
-		open( LOGFILE1, ">>$logfile")  || die("Could not open file: $!");
-		LOGFILE1->autoflush(1);
-		print LOGFILE1 ( logTime()."> $logmessage"."\n");
-		close (LOGFILE1);
-	}
+#-------------------------------------------------------------------------------
+# Intermediate query results
+#-------------------------------------------------------------------------------
+
+sub intermediate
+{
+   avgVehicleSpeed($dbh);
+   avgVehicleSpeedVal($dbh);
+   avgSpeed($dbh);
+   lav0($dbh);
+   carCount($dbh);
+}
+
+# subquery for average vehicle speed
+
+# table for LRB output
+sub avgVehicleSpeed
+{
+    my ($dbh) = @_;
+    my $startTime = time;
+    my $sql = "create table avgVehicleSpeed ( carid integer, time integer, xway
+integer, seg integer, dir integer, avgspeed float );
+copy avgVehicleSpeed from
+'/home/mjsax/workspace_aeolus/aeolus/queries/lrb/data/avg-vehicle-speed.txt'
+DELIMITER ',' CSV;"
+   my $statement = $dbh->prepare($sql);
+   $statement->execute;
+   $dbh->commit;
+
+   my $runningTime =  time - $startTime;
+   $logger->info("     avgVehicleSpeed running time: $runningTime");
+}
+
+
+# table for validator
+
+sub avgVehicleSpeedVal
+{
+    my ($dbh) = @_;
+    my $startTime = time;
+    my $sql = "create table avgVehicleSpeedVal( dir integer, seg integer, carid
+integer, minute integer, speed float);
+insert into avgVehicleSpeedVal select dir, seg, carid, trunc(time/60) +
+1, avg(speed) from input where type = 0 group by dir, seg, carid,
+trunc(time/60) + 1;"
+   my $statement = $dbh->prepare($sql);
+   $statement->execute;
+   # add "insert into notInValiator" and "insert into "notInOriginal"
+   # what is missing
+   my $sql = "select carid, minute, seg, dir, speed from avgVehicleSpeedVal except
+select carid, time, seg, dir, avgspeed from avgVehicleSpeed;"
+   my $statement = $dbh->prepare($sql);
+   $statement->execute;
+   # what is wrong
+   my $sql = "select carid, time, seg, dir, avgspeed from avgVehicleSpeed except
+select carid, minute, seg, dir, speed from avgVehicleSpeedVal;"
+   my $statement = $dhb->prepare($sql);
+   $statement->execute;
+   $dbh->commit;
+
+   my $runningTime =  time - $startTime;
+   $logger->info("     avgVehicleSpeedVal running time: $runningTime");
+}
+
+
+# subquery for average speed
+
+sub avgSpeed
+{
+    # table for LRB output
+
+    my ($dbh) = @_;
+    my $startTime = time;
+    my $sql = "create table avgSpeed ( time integer, xway integer, seg integer, dir
+    integer, avgspeed float );
+    copy avgSpeed from
+    '/home/mjsax/workspace_aeolus/aeolus/queries/lrb/data/avg-speed.txt'
+    DELIMITER ',' CSV;"
+   my $statement = $dbh->prepare($sql);
+   $statement->execute;
+   $dbh->commit;
+
+   # table for validator
+   # -> we can use table preLav (see extractLavs.pl)
+
+   # add "insert into notInValiator" and "insert into "notInOriginal"
+   # what is missing
+   my $sql = "select minute, seg, dir, round(cast(lav as numeric), 10) from prelav
+except select time, seg, dir, round(cast(avgspeed as numeric), 10) from
+avgSpeed;"
+   my $statement = $dbh->prepare($sql);
+   $statement->execute;
+
+   # what is wrong
+   my $sql = "select time, seg, dir, round(cast(avgspeed as numeric), 10) from
+avgSpeed except select minute, seg, dir, round(cast(lav as numeric), 10)
+from prelav;"
+   my $statement = $dbh->prepare($sql);
+   $statement->execute;
+   $dbh->commit;
+
+   my $runningTime =  time - $startTime;
+   $logger->info("     avgSpeed running time: $runningTime");
+}
+
+
+# subquery for average speed
+
+sub lav0
+{
+    # table for LRB output
+    my ($dbh) = @_;
+    my $startTime = time;
+    my $sql = "create table lav ( time integer, xway integer, seg integer, dir integer,
+lav float );
+copy lav from
+'/home/mjsax/workspace_aeolus/aeolus/queries/lrb/data/lav.txt' DELIMITER
+',' CSV;"
+   my $statement = $dbh->prepare($sql);
+   $statement->execute;
+
+   # table for validator
+   #-> we can use table statistics
+
+   # add "insert into notInValiator" and "insert into "notInOriginal"
+   # what is missing
+   my $sql = "select minute, seg, dir, lav from statistics where lav != -1 except
+select time, seg, dir, lav from lav;"
+   # what is wrong (do not include this -- validator does not store all
+   # lavs -> only the lavs that are required to compute a toll)
+   my $statement = $dbh->prepare($sql);
+   $statement->execute;
+
+   my $sql = "select time, seg, dir, lav from lav except select minute, seg, dir, lav
+from statistics where lav != -1;"
+   my $statement = $dbh->prepare($sql);
+   $statement->execute;
+   $dbh->commit;
+
+   my $runningTime =  time - $startTime;
+   $logger->info("     avgSpeed running time: $runningTime");
+}
+
+
+sub carCount
+{
+   # subquery for car count
+
+   # table for LRB output
+    my ($dbh) = @_;
+    my $startTime = time;
+   my $sql = "create table cars ( time integer, xway integer, seg integer, dir
+integer, count integer );
+copy cars from
+'/home/mjsax/workspace_aeolus/aeolus/queries/lrb/data/cars.txt'
+DELIMITER ',' CSV;"
+   my $statement = $dbh->prepare($sql);
+   $statement->execute;
+
+   # table for validator
+   # -> we can use table statistics
+
+
+   # add "insert into notInValiator" and "insert into "notInOriginal"
+   # what is missing
+   my $sql = "select minute, seg, dir, numvehicles from statistics where numvehicles >
+0 except select time+1, seg, dir, count from cars;"
+   my $statement = $dbh->prepare($sql);
+   $statement->execute;
+
+   # what is wrong (do not include this -- validator does not store all
+   # counts -> only the counts that are required to compute a toll)
+   my $sql = "select time+1, seg, dir, count from cars except select minute, seg,
+dir, numvehicles from statistics where numvehicles > 0;"
+   my $statement = $dbh->prepare($sql);
+   $statement->execute;
+   $dbh->commit;
+
+   my $runningTime =  time - $startTime;
+   $logger->info("     avgSpeed running time: $runningTime");
 }
