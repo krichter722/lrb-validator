@@ -50,7 +50,7 @@ my $dbpassword = shift(@arguments);
 my $logFile = shift(@arguments);
 my $logVar = shift(@arguments);
 
-writeToLog($logFile, $logVar, "runDdl in progress ...\n");
+$logger->info("runDdl in progress ...");
 
 # Connect to test Postgres database
 my $dbh  = DBI->connect(
@@ -68,7 +68,7 @@ eval
    createComparedTables($dbh);
 
    my $runningTime = time - $startTime;
-   writeToLog($logFile, $logVar,  "Total runDdl running time: $runningTime seconds\n\n");
+   $logger->info( "Total runDdl running time: $runningTime seconds");
 };
 print $@;
 
@@ -196,22 +196,4 @@ sub createComparedTables
    $dbh->do("CREATE TABLE tollAlertNotInOriginal(
                time  INTEGER,
                carid INTEGER);");
-}
-
-#--------------------------------------------------------------------------------
-
-sub logTime {
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-    return ( ($mon+1)."-".$mday."-".($year+1900)." ".$hour.":".$min.":".$sec );
-}
-
-
-sub writeToLog {
-    my ( $logfile, $logvar, $logmessage ) = @_;
-    if ($logvar eq "yes") {
-        open( LOGFILE1, ">>$logfile")  || die("Could not open file: $!");
-        LOGFILE1->autoflush(1);
-        print LOGFILE1 ( logTime()."> $logmessage"."\n");
-        close (LOGFILE1);
-    }
 }

@@ -50,7 +50,7 @@ my $dbpassword = shift(@arguments);
 my $logFile = shift(@arguments);
 my $logVar = shift(@arguments);
 
-writeToLog($logFile, $logVar, "extractNumVehicles in progress ...\n");
+$logger->info("extractNumVehicles in progress ...");
 
 # Connect to Postgres database
 my $dbh  = DBI->connect(
@@ -71,7 +71,7 @@ eval {
 
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "Total extractNumVehicles running time:  $runningTime\n\n");
+   $logger->info("Total extractNumVehicles running time:  $runningTime");
 };
 print $@;   # Print out errors
 $dbh->disconnect;
@@ -153,7 +153,7 @@ sub preVehicles
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar,"     preVehicles running time:  $runningTime\n");
+   $logger->info("     preVehicles running time:  $runningTime");
 }
 
 
@@ -176,7 +176,7 @@ sub indexPreVehicles
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     indexPreVehicles running time:  $runningTime\n");
+   $logger->info("     indexPreVehicles running time:  $runningTime");
 }
 
 #------------------------------------------------------------------------
@@ -208,7 +208,7 @@ sub vehicles
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     vehicles running time:  $runningTime\n");
+   $logger->info("     vehicles running time:  $runningTime");
 }
 
 
@@ -231,22 +231,5 @@ sub noVehicles
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     no vehicles running time:  $runningTime\n");
-}
-#--------------------------------------------------------------------------------
-
-sub logTime {
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-	return ( ($mon+1)."-".$mday."-".($year+1900)." ".$hour.":".$min.":".$sec );
-}
-
-
-sub writeToLog {
-	my ( $logfile, $logvar, $logmessage ) = @_;
-	if ($logvar eq "yes") {
-		open( LOGFILE1, ">>$logfile")  || die("Could not open file: $!");
-		LOGFILE1->autoflush(1);
-		print LOGFILE1 ( logTime()."> $logmessage"."\n");
-		close (LOGFILE1);
-	}
+   $logger->info("     no vehicles running time:  $runningTime");
 }

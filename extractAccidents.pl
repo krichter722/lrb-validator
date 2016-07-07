@@ -50,7 +50,7 @@ my $dbpassword = shift(@arguments);
 my $logFile = shift(@arguments);
 my $logVar = shift(@arguments);
 
-writeToLog($logFile, $logVar, "exractAccidents IN PROGRESS\n");
+$logger->info("exractAccidents IN PROGRESS");
 
 # Constants
 my $EMITTED_DURATION = 30;	# 30 seconds
@@ -76,7 +76,7 @@ eval {
 
    my $endTime = time;
    my $runningTime =  $endTime - $startTime;
-   writeToLog($logFile, $logVar, "Total extractAccidents running time:  $runningTime seconds\n\n");
+   $logger->info("Total extractAccidents running time:  $runningTime seconds");
 };
 print $@;   # Print out errors
 
@@ -200,7 +200,7 @@ sub cutDownTuples
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     cutDownTuples running time:  $runningTime\n");
+   $logger->info("     cutDownTuples running time:  $runningTime");
 }
 #------------------------------------------------------------------------
 # Create Indexes for preAccident1
@@ -240,7 +240,7 @@ sub createIndexes
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     createIndexes running time:  $runningTime\n");
+   $logger->info("     createIndexes running time:  $runningTime");
 }
 #------------------------------------------------------------------------
 # Extract tuples of accident cars from "preAccident1" table
@@ -322,7 +322,7 @@ sub extractAccidentTuples
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     extractAccidentTuples running time:  $runningTime\n");
+   $logger->info("     extractAccidentTuples running time:  $runningTime");
 
 }
 
@@ -377,23 +377,5 @@ sub getAccidentsInfo
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     getAccidentsInfo running time:  $runningTime\n");
-}
-
-#--------------------------------------------------------------------------------
-
-sub logTime {
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-	return ( ($mon+1)."-".$mday."-".($year+1900)." ".$hour.":".$min.":".$sec );
-}
-
-
-sub writeToLog {
-	my ( $logfile, $logvar, $logmessage ) = @_;
-	if ($logvar eq "yes") {
-		open( LOGFILE1, ">>$logfile")  || die("Could not open file: $!");
-		LOGFILE1->autoflush(1);
-		print LOGFILE1 ( logTime()."> $logmessage"."\n");
-		close (LOGFILE1);
-	}
+   $logger->info("     getAccidentsInfo running time:  $runningTime");
 }

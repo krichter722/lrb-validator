@@ -93,11 +93,8 @@ my @dailyExpenditurecomparison = $sth->fetchrow_array;
 
 if ( $dailyExpenditurecomparison[0] != 0){
 
-        print "   *** Daily Expenditure validation failed! Wrong answers stored in dailyExpenditurewronganswers table.\n";
-	$logger->info( "Daily Expenditure validation failed! Wrong answers stored in dailyExpenditurewronganswers table.");
-	exit (0);
+	$logger->logdie( "Daily Expenditure validation failed! Wrong answers stored in dailyExpenditurewronganswers table.");
 } else {
-	print "   *** Daily Expenditure Validition Completed Successfully!\n";
 	$logger->info( "Daily Expenditure Validition Completed Successfully!");
 	$dbquery="DROP TABLE dailyExpenditurewronganswers;";
 	$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;

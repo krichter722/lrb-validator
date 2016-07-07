@@ -50,7 +50,7 @@ my $dbpassword = shift(@arguments);
 my $logFile = shift(@arguments);
 my $logVar = shift(@arguments);
 
-writeToLog($logFile, $logVar, "insertStatistics in progess ...\n");
+$logger->info("insertStatistics in progess ...");
 
 # Constants
 my $SIMULATION_TIME = 180; # 180 minutes
@@ -68,7 +68,7 @@ eval {
    createIndexes($dbh);
 
    my $runningTime =  time - $startTime;
-  writeToLog($logFile, $logVar, "Total insertStatistics running time:  $runningTime\n\n");
+  $logger->info("Total insertStatistics running time:  $runningTime");
 };
 print $@;   # Print out errors
 $dbh->disconnect;
@@ -112,7 +112,7 @@ sub insertData
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     insertData running time:  $runningTime\n");
+   $logger->info("     insertData running time:  $runningTime");
 }
 
 #------------------------------------------------------------------------
@@ -134,25 +134,5 @@ sub createIndexes
    $dbh->commit;
 
    my $runningTime =  time - $startTime;
-   writeToLog($logFile, $logVar, "     createIndexes running time:  $runningTime\n");
+   $logger->info("     createIndexes running time:  $runningTime");
 }
-
-
-#--------------------------------------------------------------------------------
-
-sub logTime {
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-	return ( ($mon+1)."-".$mday."-".($year+1900)." ".$hour.":".$min.":".$sec );
-}
-
-
-sub writeToLog {
-	my ( $logfile, $logvar, $logmessage ) = @_;
-	if ($logvar eq "yes") {
-		open( LOGFILE1, ">>$logfile")  || die("Could not open file: $!");
-		LOGFILE1->autoflush(1);
-		print LOGFILE1 ( logTime()."> $logmessage"."\n");
-		close (LOGFILE1);
-	}
-}
-

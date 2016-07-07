@@ -128,37 +128,37 @@ system ("perl dropalltables.pl $dbname $dbhost $dbuser $dbpassword $logfile $log
 $logger->info("Drop table done");
 
 system ("perl import.pl $propertyfile") == 0 or $logger->logdie("import.pl failed (see preceeding output for details)");
-print "Import done\n";
+$logger->info( "Import done");
 
 system ("perl indexes.pl $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("indexes.pl failed (see preceeding output for details)");
-print "Indexes done\n";
+$logger->info( "Indexes done");
 
 # Generate alerts
 system ("perl xwayLoop.pl $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("xwayLoop.pl failed (see preceeding output for details)");
-print "Loop done\n";
+$logger->info( "Loop done");
 
 #--> IGOR:  All this stuff should move to xwayLoop.pl if you want to split, otherwise it is OK
 # Split types
 system("perl splitbytype.pl $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("splitbytype.pl failed (see preceeding output for details)");
-print "split by type done\n";
+$logger->info( "split by type done");
 
 system ("perl accountBalanceAnswer.pl $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("accountBalanceAnswer.pl failed (see preceeding output for details)");
-print "account Balance done\n";
+$logger->info( "account Balance done");
 
 system ("perl dailyExpenditureAnswer.pl $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("dailyExpenditureAnswer.pl failed (see preceeding output for details)");
-print "Daily expenditure done\n";
+$logger->info( "Daily expenditure done");
 
 
 # Validation
 system("perl compareAlerts.pl  $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("validation in compareAlters.pl failed (see preceeding output for details)");
-print "compare alerts table done\n";
+$logger->info( "compare alerts table done");
 
 system ("perl accountBalanceValidation.pl $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("validation in accountBalanceValidation.pl failed (see preceeding output for details)");
-print "accountBalanceValidation.pl done\n";
+$logger->info( "accountBalanceValidation.pl done");
 
 system ("perl dailyExpenditureValidation.pl $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("validation in dailyExpenditureValidation.pl failed (see preceeding output for details)");
-print "dailyExpenditureValidation.pl done\n";
+$logger->info( "dailyExpenditureValidation.pl done");
 
 
 my $runningTime = time - $startTime;
-print "Total running time: $runningTime\n";
+$logger->info( "Total running time: $runningTime");

@@ -49,7 +49,7 @@ my $dbpassword = shift(@arguments);
 my $logFile =  shift(@arguments);
 my $logVar = shift(@arguments);
 
-$logger->info("xwayLoop.pl in progress ...\n");
+$logger->info("xwayLoop.pl in progress ...");
 
 
 # Connect to Postgres database
@@ -66,16 +66,16 @@ eval {
    # get maximun expressway
    $maxXway = getMaxXway($dbh);
 
-   print "Max xway: $maxXway\n";
+   $logger->info( "Max xway: $maxXway");
 
    if ($maxXway > 0){
        # more than 1 xways, rename input table
        renameInputTable($dbh);
-       print "renameInputTable done\n";
+       $logger->info( "renameInputTable done");
 
        # Create temporary table for toll and accident alerts
        system("perl createAlertTmpTables.pl $dbname $dbhost $dbuser $dbpassword, $logFile $logVar") == 0 or $logger->logdie("createAlertTmpTables.pl failed (see preceeding output for details)");
-       print " createAlertTmpTables.pl done\n";
+       $logger->info( " createAlertTmpTables.pl done");
    }
 
    for (my $i = 0; $i <= $maxXway; $i++)
@@ -84,27 +84,27 @@ eval {
          # Drop input and create new one
 	 dropInput($dbh);
          createInput($dbh);
-         print " recreateInput done\n";
+         $logger->info( " recreateInput done");
 
          # extract data of xway $i from inputTmp to input
          extractInput($dbh, $i);
-         print "extractInput done\n";
+         $logger->info( "extractInput done");
        }
 
       # Create indexes for input
        createInputIndexes($dbh);
-       print "create input indexes done\n";
+       $logger->info( "create input indexes done");
 
 
        # generate toll and accident alerts for xway $i
-       system("perl generateAlerts.pl $dbname $dbhost $dbuser $dbpassword $logFile $logVar") == 0 or $logger->logdie("generateAlerts.pl failed (see preceeding output for details)");;
-       print "generate Alerts done\n";
+       system("perl generateAlerts.pl $dbname $dbhost $dbuser $dbpassword $logFile $logVar") == 0 or $logger->logdie("generateAlerts.pl failed (see preceeding output for details)");
+       $logger->info( "generate Alerts done");
 
 
        if ($maxXway > 0 ){
           # more than 1 xways, insert the alerts into Tmp table
           system ("perl addAlerts.pl $dbname $dbhost $dbuser $dbpassword $logFile $logVar") == 0 or $logger->logdie("addAlerts.pl failed (see preceeding output for details)");;
-          print " addAlerts.pl done\n";
+          $logger->info( " addAlerts.pl done");
 
       }
    }
@@ -114,15 +114,15 @@ eval {
       dropInput($dbh);
       # rename inputTmp table to input
        renameInputTmpTable($dbh);
-       print "renameInputTmpTable done\n";
+       $logger->info( "renameInputTmpTable done");
 
       # rename tollAccAlertsTmp to tollAccAlerts
       system("perl renameAlertTmpTables.pl $dbname $dbhost $dbuser $dbpassword $logFile $logVar") == 0 or $logger->logdie("renameAlertTmpTables.pl failed (see preceeding output for details)");;
-       print "renameAlertTmpTables.pl done\n";
+       $logger->info( "renameAlertTmpTables.pl done");
    }
 
    my $runningTime = time - $startTime;
-   $logger->info("Total xwayLoop running time: $runningTime seconds\n\n");
+   $logger->info("Total xwayLoop running time: $runningTime seconds");
 
 };
 print$@;
@@ -153,7 +153,7 @@ sub  getMaxXway
       }
 
       my $runningTime = time - $startTime;
-      $logger->info("     getNumXway running time: $runningTime\n");
+      $logger->info("     getNumXway running time: $runningTime");
 
      return $maxXway;
 }
@@ -173,7 +173,7 @@ sub  renameInputTable
       $dbh->commit;
 
       my $runningTime = time - $startTime;
-      $logger->info("     renameInputTable running time: $runningTime\n");
+      $logger->info("     renameInputTable running time: $runningTime");
 }
 
 #-------------------------------------------------------------------------------
