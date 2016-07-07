@@ -86,6 +86,7 @@ class Bootstrapper():
         self.db_pass=db_pass
         self.shutdown_server=shutdown_server
         self.shutdown_event = threading.Event()
+        self.db_server_proc = None
 
     def stop(self, wait=True):
         """Initializes the shutdown process for the database server. Waits for
@@ -95,20 +96,7 @@ class Bootstrapper():
         if wait is True:
             self.waitFor()
 
-    def start(self):
-        # generate validate.config
-        generate_validate_config.generate_validate_config()
-
-        # generate and start database
-        db_dir_path = os.path.join(self.base_dir_path, "database")
-        created = False
-        if not os.path.exists(db_dir_path):
-            logger.debug("creating PostgreSQL database in '%s'" % (db_dir_path,))
-            sp.check_call([self.initdb, db_dir_path])
-            created = True
-        else:
-            logger.debug("skipping creation of existing database '%s' (assuming the database is setup correctly which means that remaining rests of a crashed setup need to be removed manually)" % (db_dir_path,))
-        db_server_proc = None
+    def startDB(self, db_dir_path, shutdown_server):
         class DBThread(threading.Thread):
             def __init__(self, shutdown_event, postgres, db_host):
                 super(DBThread, self).__init__()
@@ -127,29 +115,39 @@ class Bootstrapper():
                         os.makedirs(self.db_host)
                     elif not os.path.isdir(self.db_host):
                         raise ValueError("path for database host (socket directory) '%s' points to an existing file or link" % (self.db_host,))
+                    else:
+                        logger.info("using database host '%s'" % (self.db_host,))
                 db_server_proc_cmds = [self.postgres, "-D", db_dir_path, "-k", self.db_host]
                 if postgres_version <= (9,4):
                     db_server_proc_cmds += ["--checkpoint_segments=48", # avoiding `LOG:  checkpoints are occurring too frequently ([n] seconds apart)` (occured with 24) (seems to be handled by `max_wal_size` in 9.5 @TODO: figure out good value and if it can be used exactly as `checkpoint_segments`)
                     ]
-                db_server_proc = sp.Popen(db_server_proc_cmds)
-                while not self.shutdown_event.is_set() and db_server_proc.poll() == None:
+                self.db_server_proc = sp.Popen(db_server_proc_cmds)
+                while not self.shutdown_event.is_set() and self.db_server_proc.poll() == None:
                     time.sleep(1) # in python 3.x it might be better to use subprocess.Popen.wait with timeout because it used short sleeps of the asyncio module<ref>https://docs.python.org/3.4/library/subprocess.html#subprocess.Popen.wait</ref>
                 if self.shutdown_event.is_set():
                     logger.debug("server shutdown requested")
-                if db_server_proc.poll() == None:
-                    db_server_proc.send_signal(signal.SIGINT)
+                if self.db_server_proc.poll() == None:
+                    self.db_server_proc.send_signal(signal.SIGINT)
                     try_1_time = 0
                     try_1_time_max = 5
                     try_1_interval = .5
-                    while db_server_proc.poll() == None and try_1_time < try_1_time_max:
+                    while self.db_server_proc.poll() == None and try_1_time < try_1_time_max:
                         try_1_time += try_1_interval
                         time.sleep(try_1_interval)
-                    if db_server_proc.poll() == None:
-                        db_server_proc.terminate()
-                elif db_server_proc.returncode != 0:
-                    raise RuntimeError("server process returned abnormally with code %d" % (db_server_proc.returncode,))
+                    if self.db_server_proc.poll() == None:
+                        self.db_server_proc.terminate()
+                elif self.db_server_proc.returncode != 0:
+                    raise RuntimeError("server process returned abnormally with code %d" % (self.db_server_proc.returncode,))
         self.db_thread = DBThread(shutdown_event=self.shutdown_event, postgres=self.postgres, db_host=self.db_host)
         self.db_thread.start()
+
+        if shutdown_server is False:
+            logger.info("registering signal handler for SIGINT to shutdown database cleanly")
+            def __handler__(signum, frame):
+                logger.info("received SIGINT, terminating database process")
+                self.shutdown_event.set()
+            signal.signal(signal.SIGINT, __handler__)
+
         conn = None
         try_time = 0
         try_time_max = 10 # time in seconds in which we try to connect to the server
@@ -167,8 +165,32 @@ class Bootstrapper():
                 try_time += try_interval
                 time.sleep(try_interval)
         if conn == None:
+            self.stopDB()
             self.stop(wait=True)
             raise Exception("Database connection could repeatedly not be created due to (last exception) '%s'" % (str(db_connect_ex),))
+
+    def stopDB(self):
+        if self.db_thread != None:
+            self.shutdown_event.set()
+            logger.debug("waiting for server to terminate")
+
+    def generateDBDirPath(self):
+        return os.path.join(self.base_dir_path, "database")
+
+    def start(self):
+        # generate validate.config
+        generate_validate_config.generate_validate_config()
+
+        # generate and start database
+        db_dir_path = self.generateDBDirPath()
+        created = False
+        if not os.path.exists(db_dir_path):
+            logger.debug("creating PostgreSQL database in '%s'" % (db_dir_path,))
+            sp.check_call([self.initdb, db_dir_path])
+            created = True
+        else:
+            logger.debug("skipping creation of existing database '%s' (assuming the database is setup correctly which means that remaining rests of a crashed setup need to be removed manually)" % (db_dir_path,))
+        self.startDB(db_dir_path=db_dir_path, shutdown_server=self.shutdown_server)
         if created:
             cur = conn.cursor()
             logger.debug("creating user %s" % (self.db_user,))
@@ -193,16 +215,8 @@ class Bootstrapper():
     %s""" % ("*"*(len(success_message)+4), "* %s *" % success_message, "*"*(len(success_message)+4)))
         logger.info("database is still running and can (and should) be used for LRB validator's validate.pl")
         if self.shutdown_server:
-            if self.db_thread != None:
-                self.shutdown_event.set()
-                logger.debug("waiting for server to terminate")
+            self.stopDB()
             self.stop(wait=True)
-        else:
-            logger.info("registering signal handler for SIGINT to shutdown database cleanly")
-            def __handler__(signum, frame):
-                logger.info("received SIGINT, terminating database process")
-                self.shutdown_event.set()
-            signal.signal(signal.SIGINT, __handler__)
 
     def waitFor(self):
         while self.db_thread.is_alive():
@@ -219,7 +233,9 @@ def bootstrap_unprivileged(initdb=initdb_default,
     db_pass=validate_globals.database_password_default,
     shutdown_server=False
 ):
-    """creates, starts and returns a `Bootstrapper`"""
+    """creates and returns a `Bootstrapper` which needs to be started with its
+    `start` function or can be used otherwise (e.g. with the `startDB` and
+    `stopDB` functions)"""
     ret_value = Bootstrapper(initdb=initdb,
         postgres=postgres,
         createdb=createdb,
@@ -230,7 +246,6 @@ def bootstrap_unprivileged(initdb=initdb_default,
         db_pass=db_pass,
         shutdown_server=shutdown_server
     )
-    ret_value.start()
     return ret_value
 
 def main():
