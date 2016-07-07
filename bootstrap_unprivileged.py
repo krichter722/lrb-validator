@@ -97,6 +97,8 @@ class Bootstrapper():
             self.waitFor()
 
     def startDB(self, db_dir_path, shutdown_server):
+        """starts the thread which controls the database process and returns
+        the connection object"""
         class DBThread(threading.Thread):
             def __init__(self, shutdown_event, postgres, db_host):
                 super(DBThread, self).__init__()
@@ -168,6 +170,7 @@ class Bootstrapper():
             self.stopDB()
             self.stop(wait=True)
             raise Exception("Database connection could repeatedly not be created due to (last exception) '%s'" % (str(db_connect_ex),))
+        return conn
 
     def stopDB(self):
         if self.db_thread != None:
@@ -190,7 +193,7 @@ class Bootstrapper():
             created = True
         else:
             logger.debug("skipping creation of existing database '%s' (assuming the database is setup correctly which means that remaining rests of a crashed setup need to be removed manually)" % (db_dir_path,))
-        self.startDB(db_dir_path=db_dir_path, shutdown_server=self.shutdown_server)
+        conn = self.startDB(db_dir_path=db_dir_path, shutdown_server=self.shutdown_server)
         if created:
             cur = conn.cursor()
             logger.debug("creating user %s" % (self.db_user,))
