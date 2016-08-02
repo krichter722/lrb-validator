@@ -37,6 +37,12 @@ ch.setLevel(logging.INFO)
 logger.addHandler(ch)
 
 remove_log_value_map = {True: "yes", False: "no"}
+use_template_helper = False
+    # a flag for the usage of the not too intuitive, but destruction-preventing
+    # template-helper module (opens a GUI or command line difftool in case the
+    # template output doesn't match with the already existing file which allows
+    # keeping track of changes which have been made to the output file and would
+    # otherwise be overwritten)
 
 @plac.annotations(
     base_dir_path=("the base directory of the LRB validator input and output data", "positional", None, str),
@@ -46,15 +52,23 @@ remove_log_value_map = {True: "yes", False: "no"}
     database_host=("the database host specification (TCP address or path to local socket)", "option"),
     database_user=("the database user", "option"),
     database_password=("the database password", "option"),
+    validate_config_file_path=("The path of the output file", "option"),
 )
-def generate_validate_config(base_dir_path=validate_globals.base_dir_path_default, remove_log=False, log_file_name=validate_globals.log_file_name_default, database_name=validate_globals.database_name_default, database_host=validate_globals.database_host_default, database_user=validate_globals.database_user_default, database_password=validate_globals.database_password_default):
+def generate_validate_config(base_dir_path=validate_globals.base_dir_path_default,
+    remove_log=False,
+    log_file_name=validate_globals.log_file_name_default,
+    database_name=validate_globals.database_name_default,
+    database_host=validate_globals.database_host_default,
+    database_user=validate_globals.database_user_default,
+    database_password=validate_globals.database_password_default,
+    validate_config_file_path=validate_globals.validate_config_file_path_default):
     if not os.path.exists(base_dir_path):
         logger.info("creating inexisting base directory '%s'" % (base_dir_path,))
         os.makedirs(base_dir_path)
     elif os.path.isfile(base_dir_path):
         raise ValueError("base directory '%s' is an existing file, but needs to be a directory" % (base_dir_path,))
     t = Template(file=os.path.realpath(os.path.join(__file__, "..", "validate.config.tmpl")))
-    t_file_path = os.path.realpath(os.path.join(__file__, "..", "validate.config"))
+    t_file_path = validate_config_file_path
     t.base_dir_path = base_dir_path
     t.keep_log = remove_log_value_map[not remove_log] #see internal implementation notes below
     t.log_file_name = log_file_name
@@ -62,7 +76,13 @@ def generate_validate_config(base_dir_path=validate_globals.base_dir_path_defaul
     t.database_host = database_host
     t.database_user = database_user
     t.database_password = database_password
-    template_helper.write_template_file(str(t), t_file_path)
+    if use_template_helper is True:
+        template_helper.write_template_file(str(t), t_file_path)
+    else:
+        t_file = open(t_file_path, "w")
+        t_file.write(str(t))
+        t_file.flush()
+        t_file.close()
 # internal implementation notes:
 # - due to the fact that the keeplog variable is true by default (which isn't
 # useful for a flag), we wrap it in its negative meaning to get a by default

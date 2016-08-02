@@ -25,3 +25,4 @@ database_name_default = "dbxway01"
 database_host_default = "/tmp/lrb-validator/postgres.socket"
 database_user_default = "linear"
 database_password_default = "linear"
+validate_config_file_path_default = os.path.join(base_dir_path_default, "validate.config")

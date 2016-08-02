@@ -72,7 +72,9 @@ class Bootstrapper():
         db_host=validate_globals.database_host_default,
         db_user=validate_globals.database_user_default,
         db_pass=validate_globals.database_password_default,
-        shutdown_server=False
+        shutdown_server=False,
+        skip_generate_validate_config=False,
+        validate_config_file_path=validate_globals.validate_config_file_path_default,
     ):
         self.initdb=initdb
         if not os.path.exists(postgres):
@@ -87,6 +89,8 @@ class Bootstrapper():
         self.shutdown_server=shutdown_server
         self.shutdown_event = threading.Event()
         self.db_server_proc = None
+        self.skip_generate_validate_config = skip_generate_validate_config
+        self.validate_config_file_path = validate_config_file_path
 
     def stop(self, wait=True):
         """Initializes the shutdown process for the database server. Waits for
@@ -182,7 +186,8 @@ class Bootstrapper():
 
     def start(self):
         # generate validate.config
-        generate_validate_config.generate_validate_config()
+        if self.skip_generate_validate_config is False:
+            generate_validate_config.generate_validate_config(base_dir_path=self.base_dir_path, validate_config_file_path=self.validate_config_file_path)
 
         # generate and start database
         db_dir_path = self.generateDBDirPath()
@@ -234,7 +239,9 @@ def bootstrap_unprivileged(initdb=initdb_default,
     db_host = validate_globals.database_host_default,
     db_user=validate_globals.database_user_default,
     db_pass=validate_globals.database_password_default,
-    shutdown_server=False
+    shutdown_server=False,
+    skip_generate_validate_config=False,
+    validate_config_file_path=validate_globals.validate_config_file_path_default,
 ):
     """creates and returns a `Bootstrapper` which needs to be started with its
     `start` function or can be used otherwise (e.g. with the `startDB` and
@@ -247,7 +254,9 @@ def bootstrap_unprivileged(initdb=initdb_default,
         db_host=db_host,
         db_user=db_user,
         db_pass=db_pass,
-        shutdown_server=shutdown_server
+        shutdown_server=shutdown_server,
+        skip_generate_validate_config=skip_generate_validate_config,
+        validate_config_file_path=validate_config_file_path,
     )
     return ret_value
 
