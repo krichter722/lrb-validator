@@ -41,7 +41,8 @@ logger_formatter = logging.Formatter('%(asctime)s:%(message)s')
 logger_stdout_handler.setFormatter(logger_formatter)
 logger.addHandler(logger_stdout_handler)
 
-@plac.annotations(server_only=plac.Annotation("A flag which allows to start the database server only", "flag")
+@plac.annotations(perl=plac.Annotation("The perl binary to use", "option"),
+    server_only=plac.Annotation("A flag which allows to start the database server only", "flag")
 )
 def run(perl="perl", server_only=False):
     """Runs the relevant perl scripts of the `lrb-validator` and the necessary
