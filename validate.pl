@@ -46,6 +46,7 @@ my $logger = Log::Log4perl->get_logger('lrb_validator.validate');
 my $verbose = 'Print verbose informtion';	# option variable with default value (false)
 my $debug = 'Print debug information (implies verbose)';	# option variable with default value (false)
 my $propertyfile = ''; # Path to properties file
+my $forcerecreatedb = ''; # Force recreation of databases (specify if input data changed)
 
 # somehow declaring sub arguments fails because the argument names are not declared (-> sense?)
 sub properties_file_arg {
@@ -54,7 +55,7 @@ sub properties_file_arg {
 
 # apparently non-option arguments can only be specified using subroutine being
 # associated with '<>'<ref>http://perldoc.perl.org/Getopt/Long.html</ref>
-GetOptions ('verbose' => \$verbose, 'debug' => \$debug, '<>' => \&properties_file_arg)
+GetOptions ('verbose' => \$verbose, 'debug' => \$debug, 'force-recreate-db' => \$forcerecreatedb, '<>' => \&properties_file_arg)
 or die("Option parsing failed due to previously indicated error"); # GetOptions writes error messages
     # with warn() and die(), so they should be definitely displayed
 
@@ -71,6 +72,7 @@ my $dbuser;
 my $dbpassword;
 my $logfile;
 my $logvar;
+my $tollaccalertstablename = "tollAccAlerts";
 
 #BEGIN {
 #	open (STDERR, ">execution.log");
@@ -124,33 +126,36 @@ close ( PROPERTIES );
 
 my $startTime = time;
 
-system ("perl dropalltables.pl $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("dropalltables.pl failed (see preceeding output for details)");
-$logger->info("Drop table done");
+# only prepare if forcerecreatedb is specified
+if ( $forcerecreatedb ne '' ) {
+    system ("perl dropalltables.pl $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("dropalltables.pl failed (see preceeding output for details)");
+    $logger->info("Drop table done");
 
-system ("perl import.pl $propertyfile") == 0 or $logger->logdie("import.pl failed (see preceeding output for details)");
-$logger->info( "Import done");
 
-system ("perl indexes.pl $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("indexes.pl failed (see preceeding output for details)");
-$logger->info( "Indexes done");
+    system ("perl import.pl $propertyfile") == 0 or $logger->logdie("import.pl failed (see preceeding output for details)");
+    $logger->info( "Import done");
 
-# Generate alerts
-system ("perl xwayLoop.pl $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("xwayLoop.pl failed (see preceeding output for details)");
-$logger->info( "Loop done");
+    system ("perl indexes.pl $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("indexes.pl failed (see preceeding output for details)");
+    $logger->info( "Indexes done");
 
-#--> IGOR:  All this stuff should move to xwayLoop.pl if you want to split, otherwise it is OK
-# Split types
-system("perl splitbytype.pl $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("splitbytype.pl failed (see preceeding output for details)");
-$logger->info( "split by type done");
+    # Generate alerts
+    system ("perl xwayLoop.pl $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("xwayLoop.pl failed (see preceeding output for details)");
+    $logger->info( "Loop done");
 
-system ("perl accountBalanceAnswer.pl $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("accountBalanceAnswer.pl failed (see preceeding output for details)");
-$logger->info( "account Balance done");
+    #--> IGOR:  All this stuff should move to xwayLoop.pl if you want to split, otherwise it is OK
+    # Split types
+    system("perl splitbytype.pl $dbname $dbhost $dbuser $dbpassword $logfile $logvar $tollaccalertstablename") == 0 or $logger->logdie("splitbytype.pl failed (see preceeding output for details)");
+    $logger->info( "split by type done");
 
-system ("perl dailyExpenditureAnswer.pl $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("dailyExpenditureAnswer.pl failed (see preceeding output for details)");
-$logger->info( "Daily expenditure done");
+    system ("perl accountBalanceAnswer.pl $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("accountBalanceAnswer.pl failed (see preceeding output for details)");
+    $logger->info( "account Balance done");
 
+    system ("perl dailyExpenditureAnswer.pl $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("dailyExpenditureAnswer.pl failed (see preceeding output for details)");
+    $logger->info( "Daily expenditure done");
+}
 
 # Validation
-system("perl compareAlerts.pl  $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("validation in compareAlters.pl failed (see preceeding output for details)");
+system("perl compareAlerts.pl  $dbname $dbhost $dbuser $dbpassword $logfile $logvar $tollaccalertstablename") == 0 or $logger->logdie("validation in compareAlters.pl failed (see preceeding output for details)");
 $logger->info( "compare alerts table done");
 
 system ("perl accountBalanceValidation.pl $dbname $dbhost $dbuser $dbpassword $logfile $logvar") == 0 or $logger->logdie("validation in accountBalanceValidation.pl failed (see preceeding output for details)");

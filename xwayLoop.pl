@@ -48,6 +48,7 @@ my $dbuser = shift(@arguments);
 my $dbpassword = shift(@arguments);
 my $logFile =  shift(@arguments);
 my $logVar = shift(@arguments);
+my $tollaccalertstablename = shift(@arguments);
 
 $logger->info("xwayLoop.pl in progress ...");
 
@@ -103,7 +104,7 @@ eval {
 
        if ($maxXway > 0 ){
           # more than 1 xways, insert the alerts into Tmp table
-          system ("perl addAlerts.pl $dbname $dbhost $dbuser $dbpassword $logFile $logVar") == 0 or $logger->logdie("addAlerts.pl failed (see preceeding output for details)");;
+          system ("perl addAlerts.pl $dbname $dbhost $dbuser $dbpassword $logFile $logVar $tollaccalertstablename") == 0 or $logger->logdie("addAlerts.pl failed (see preceeding output for details)");;
           $logger->info( " addAlerts.pl done");
 
       }

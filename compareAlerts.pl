@@ -59,6 +59,7 @@ my $dbuser = shift(@arguments);
 my $dbpassword = shift(@arguments);
 my $logFile = shift(@arguments);
 my $logVar = shift(@arguments);
+my $tollaccalertstablename = shift(@arguments);
 
 $logger->info( "compareALerts in progress ...");
 
@@ -97,8 +98,8 @@ sub createIndex
 
    my $startTime = time;
 
-   $dbh->do("CREATE INDEX tollAccIdx1 ON tollAccAlerts(time, carid, accidentSeg);");
-   $dbh->do("CREATE INDEX tollAccIdx2 ON tollAccAlerts(time, carid);");
+   $dbh->do("CREATE INDEX tollAccIdx1 ON $tollaccalertstablename(time, carid, accidentSeg);");
+   $dbh->do("CREATE INDEX tollAccIdx2 ON $tollaccalertstablename(time, carid);");
 
    my $runningTime =  time - $startTime;
    $logger->info( "     createIndex running time:  $runningTime");
@@ -123,7 +124,7 @@ sub accAlertNotInValidator
                EXCEPT
                SELECT acc1.time, acc1.carid, acc1.seg
                FROM   accidentAlerts AS acc1,
-                      tollAccAlerts AS acc2
+                      $tollaccalertstablename AS acc2
                WHERE  acc1.time = acc2.time AND
                       acc1.carid = acc2.carid AND
                       acc1.seg = acc2.accidentSeg;";
@@ -151,11 +152,11 @@ sub accAlertNotInOriginal
 
    my $sql =  "INSERT INTO  accAlertNotInOriginal
                SELECT time, carid, accidentSeg
-               FROM   tollAccAlerts
+               FROM   $tollaccalertstablename
                WHERE  accidentSeg <> -1
                EXCEPT
                SELECT acc1.time, acc1.carid, acc1.accidentSeg
-               FROM   tollAccAlerts AS acc1,
+               FROM   $tollaccalertstablename AS acc1,
                       accidentAlerts AS acc2
                WHERE  acc1.time = acc2.time AND
                       acc1.carid = acc2.carid AND
@@ -184,7 +185,7 @@ sub accAlertDifferentSegment
    my $sql =  "INSERT INTO accAlertDifferentSegment
                SELECT acc1.time, acc1.carid, acc1.seg, acc2.accidentSeg
                FROM   accidentAlerts AS acc1,
-                      tollAccAlerts AS acc2
+                      $tollaccalertstablename AS acc2
                WHERE  acc1.time = acc2.time AND
                       acc1.carid = acc2.carid AND
                       acc1.seg <> acc2.accidentSeg;";
@@ -214,7 +215,7 @@ sub tollAlertDifferentLav
                       toll1.lav,
                       toll2.lav
                FROM   tollAlerts toll1,
-                      tollAccAlerts toll2
+                      $tollaccalertstablename toll2
                WHERE  toll1.carid = toll2.carid AND
                       toll1.time = toll2.time AND
                       toll1.lav <> toll2.lav;";
@@ -245,7 +246,7 @@ sub tollAlertDifferentToll
                       toll1.toll,
                       toll2.toll
                FROM   tollAlerts toll1,
-                      tollAccAlerts toll2
+                      $tollaccalertstablename toll2
                WHERE  toll1.carid = toll2.carid AND
                       toll1.time = toll2.time AND
                       toll1.toll <> toll2.toll;";
@@ -275,7 +276,7 @@ sub tollAlertNotInValidator
                EXCEPT
                SELECT toll1.time, toll1.carid
                FROM   tollAlerts AS toll1,
-                      tollAccAlerts AS toll2
+                      $tollaccalertstablename AS toll2
                WHERE  toll1.time = toll2.time AND
                       toll1.carid = toll2.carid AND
                       toll1.lav = toll2.lav AND
@@ -304,10 +305,10 @@ sub tollAlertNotInOriginal
 
    my $sql =  "INSERT INTO  tollAlertNotInOriginal
                SELECT time, carid
-               FROM   tollAccAlerts
+               FROM   $tollaccalertstablename
                EXCEPT
                SELECT toll1.time, toll1.carid
-               FROM   tollAccAlerts AS toll1,
+               FROM   $tollaccalertstablename AS toll1,
                       tollAlerts AS toll2
                WHERE  toll1.time = toll2.time AND
                       toll1.carid = toll2.carid AND

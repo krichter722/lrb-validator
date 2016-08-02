@@ -53,89 +53,89 @@ my $dbh  = DBI->connect(
           ) || $logger->logdie("Could not connect to database:  $DBI::errstr");
 
 $dbquery="DROP TABLE completehistory;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE input;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE outputAccountBalance;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE outputDailyExpenditure;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE tollalerts;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE accidentalerts;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE accountBalanceAncient;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE  accountBalanceAnswer;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE accountBalanceLast;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE accountBalanceMiddle;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE accountBalanceNow;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE accountBalanceQueryAtenterance;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE accountBalanceRequests;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE accountBalanceTime0;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE accountBalanceTime1;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE accountBalanceTime10;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE accountBalanceTime2;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE accountBalanceTime60;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE accountBalanceTimeeq;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE accountBalanceWrongAnswers;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE dailyExpenditureAnswer;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 $dbquery="DROP TABLE dailyExpenditureRequests;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;

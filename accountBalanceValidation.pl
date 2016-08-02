@@ -53,40 +53,40 @@ my $dbh  = DBI->connect(
 
 #Creating wrong answers table, just a copy of all output at the moment
 $dbquery="SELECT * into accountBalancewronganswers FROM outputaccountBalance;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 #Deleting all of the right answers from wrong answer table
 $dbquery="DELETE FROM accountBalancewronganswers WHERE accountBalancewronganswers.qid=accountBalanceanswer.qid and accountBalancewronganswers.bal=accountBalanceanswer.toll and accountBalancewronganswers.resulttime=accountBalanceanswer.resulttime;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 
 #Selecting for validation
 $dbquery="SELECT qid, resulttime, bal FROM accountBalancewronganswers LIMIT 50;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 my @accountBalancecomparison = $sth->fetchrow_array;
 
 if (!@accountBalancecomparison){
 	$dbquery="select i.carid, i.time, i.qid  into temp1 from input as i, accountBalancewronganswers as wr where i.qid=wr.qid and i.time=wr.time;";
-	$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+	$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 	$sth->execute;
 
 	$dbquery="select temp1.carid, temp1.time, temp1.qid into temp2 from temp1, input where temp1.carid=input.carid and input.time=temp1.time and input.lane=4;";
-	$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+	$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 	$sth->execute;
 
 	$dbquery="delete from accountBalancewronganswers where accountBalancewronganswers.qid=temp2.qid and temp2.time=accountBalancewronganswers.resulttime";
-	$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+	$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 	$sth->execute;
 
        $dbh->do("DROP TABLE temp1;");
        $dbh->do("DROP TABLE temp2;");
 }
 $dbquery="SELECT qid, resulttime, bal FROM accountBalancewronganswers LIMIT 50;";
-$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 $sth->execute;
 
 @accountBalancecomparison = $sth->fetchrow_array;
@@ -103,14 +103,14 @@ if ( !@accountBalancecomparison){
 	exit (0);
 }else {
 	$dbquery="DROP TABLE accountBalancewronganswers;";
-	$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+	$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 	$sth->execute;
 }
 #$dbquery="DROP TABLE accountBalanceancient;DROP TABLE accountBalancelast;DROP TABLE accountBalancemiddle;DROP TABLE accountBalancenow;
 #	DROP TABLE accountBalancequeryatenterance;DROP TABLE accountBalancetime0;
 #	DROP TABLE accountBalancetime1;DROP TABLE accountBalancetime10;DROP TABLE accountBalancetime2;DROP TABLE accountBalancetime60;
 #	DROP TABLE accountBalancetimeeq;";
-#	$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+#	$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 #	$sth->execute;
 
        $dbh->do("DROP TABLE accountBalanceancient;");

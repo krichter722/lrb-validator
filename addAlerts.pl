@@ -48,6 +48,7 @@ my $dbuser = shift(@arguments);
 my $dbpassword = shift(@arguments);
 my $logFile = shift(@arguments);
 my $logVar = shift(@arguments);
+my $tollaccalertstablename = shift(@arguments);
 
 $logger->info("addAlerts in progress ...\n");
 
@@ -85,7 +86,7 @@ sub  insertAlerts
    my $startTime = time;
 
    my $sql = "INSERT INTO tollAccAlertsTmp
-              SELECT * from tollAccAlerts;";
+              SELECT * from $tollaccalertstablename;";
 
    my $statment = $dbh->prepare($sql);
    $statment->execute;

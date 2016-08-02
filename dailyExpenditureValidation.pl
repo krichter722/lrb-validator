@@ -33,7 +33,7 @@ use FileHandle;
 use Log::Log4perl qw(:easy);
 
 Log::Log4perl->easy_init($DEBUG);
-my $logger = Log::Log4perl->get_logger('lrb_validator.import');
+my $logger = Log::Log4perl->get_logger('lrb_validator.dailyexpenditurevalidation');
 
 # Process arguments
 my @arguments = @ARGV;
@@ -55,11 +55,11 @@ my $dbh  = DBI->connect(
 ## If counts aren't the same, the delete can still delete all from the wrong answer table--despite wrong answer.
 $logger->info( "Comparing output and answer table sizes for type 3.");
 	$dbquery="SELECT Count(*) AS CountOfqueryid FROM dailyExpenditureanswer;";
-	$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+	$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 	$sth->execute;
 my @answerCount = $sth->fetchrow_array;
 	$dbquery="SELECT Count(*) AS CountOfqueryid FROM outputdailyExpenditure;";
-	$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+	$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 	$sth->execute;
 my @outputCount = $sth->fetchrow_array;
 
@@ -73,19 +73,19 @@ if ($answerCount[0]!=$outputCount[0] and $answerCount[0] ne $outputCount[0] ) {
 
 ## Compare answers query
 	$dbquery="select * into dailyExpenditurewronganswers from outputdailyExpenditure;";
-	$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+	$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 	$sth->execute;
 
 	$dbquery="DELETE FROM dailyExpenditurewronganswers WHERE dailyExpenditurewronganswers.qid=outputdailyExpenditure.qid and dailyExpenditurewronganswers.bal=outputdailyExpenditure.bal;";
-	$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+	$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 	$sth->execute;
 
 #	$dbquery="SELECT * FROM dailyExpenditurewronganswers LIMIT 50;";
-#	$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+#	$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 #	$sth->execute;
 
 	$dbquery="SELECT count (*) FROM dailyExpenditurewronganswers;";
-	$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+	$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 	$sth->execute;
 
 
@@ -97,6 +97,6 @@ if ( $dailyExpenditurecomparison[0] != 0){
 } else {
 	$logger->info( "Daily Expenditure Validition Completed Successfully!");
 	$dbquery="DROP TABLE dailyExpenditurewronganswers;";
-	$sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+	$sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
 	$sth->execute;
 }

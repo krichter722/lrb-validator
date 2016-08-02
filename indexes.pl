@@ -55,13 +55,13 @@ my $dbh  = DBI->connect(
 $logger->info ("Adding indexes on tollalerts and accidentalerts.");
 
     $dbquery="CREATE INDEX tollalertstime ON tollalerts (time);";
-    $sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+    $sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
     $sth->execute;
     $dbquery="CREATE INDEX tollalertscarid ON tollalerts (carid);";
-    $sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+    $sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
     $sth->execute;
     $dbquery="CREATE INDEX tollalertstoll ON tollalerts (toll);";
-    $sth=$dbh->prepare("$dbquery") or die $DBI::errstr;
+    $sth=$dbh->prepare("$dbquery") or $logger->logdie($DBI::errstr);
     $sth->execute;
 
     $dbh->do("CREATE INDEX tollIdx1 ON tollAlerts(time, carid);");

@@ -44,11 +44,12 @@ logger.addHandler(logger_stdout_handler)
 
 @plac.annotations(perl=plac.Annotation("The perl binary to use", "option"),
     server_only=plac.Annotation("A flag which allows to start the database server only", "flag"),
+    force_recreate_db=plac.Annotation("A flag which allows to force the recreation of the database scheme (should be used after input data changed and should be unnecessary otherwise)", "flag"),
     base_dir_path=plac.Annotation("The location of the validator input/output data", "option"), # should be fine to expose this since having a database in the data directory makes a lot of sense
     skip_generate_validate_config=plac.Annotation("A flag indicating that the generation of the validate.config file ought to be skipped (e.g. because it has been modified and changes ought not to be overwritten)", "flag"),
     validate_config_file_path=plac.Annotation("The validate.config file to use (will be generated automatically from validate.config.tmpl if the -skip-generate-validate-config flag isn't specified", "option"),
 )
-def run(perl="perl", server_only=False, base_dir_path=validate_globals.base_dir_path_default, skip_generate_validate_config=False, validate_config_file_path=validate_globals.validate_config_file_path_default):
+def run(perl="perl", server_only=False, base_dir_path=validate_globals.base_dir_path_default, skip_generate_validate_config=False, validate_config_file_path=validate_globals.validate_config_file_path_default, force_recreate_db=False):
     """Runs the relevant perl scripts of the `lrb-validator` and the necessary
     setup and bootstrapping steps before. If the perl scripts fails a
     `subprocess.CalledProcessError` will be raised and the database server will
@@ -70,7 +71,11 @@ def run(perl="perl", server_only=False, base_dir_path=validate_globals.base_dir_
             # be regenerated (e.g. after changes) with `generate_validate_config.py` (see
             # `generate_validate_config.py --help` for usage info)
             try:
-                sp.check_call([perl, "validate.pl", "validate.config"])
+                validate_cmds = [perl, "validate.pl"]
+                if force_recreate_db is True:
+                    validate_cmds += ["-force-recreate-db"]
+                validate_cmds += ["validate.config"]
+                sp.check_call(validate_cmds)
             except sp.CalledProcessError as ex:
                 logger.error("one of the perl scripts failed (see preceeding output for details) with exception '%s', trying to shutdown database server cleanly, then terminating" % (str(ex),))
                 if bootstrapper != None:
